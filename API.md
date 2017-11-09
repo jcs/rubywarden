@@ -1,7 +1,7 @@
 ## Bitwarden API Overview
 
 Despite being open source, the
-[Bitwarden API code](https://github.com/bitwarden/core)
+[.NET Bitwarden API code](https://github.com/bitwarden/core)
 is somewhat difficult to navigate and comprehend from a high level,
 and there is no formal documentation on API endpoints or how the
 encryption and decryption is implemented.
@@ -25,10 +25,16 @@ User enters a `$masterPassword` of `p4ssw0rd` and an `$email` of
 PBKDF2 is used with a password of `$masterPassword`, salt of lowercased
 `$email`, and 5000 iterations to stretch password into `$internalKey`.
 
+	def makeKey(password, salt)
+	  PBKDF2.new(:password => password, :salt => salt,
+	    :iterations => 5000, :hash_function => OpenSSL::Digest::SHA256,
+	    :key_length => (256 / 8)).bin_string
+	end
+
 	irb> $internalKey = makeKey("p4ssw0rd", "nobody@example.com".downcase)
 	=> "\x13\x88j`\x99m\xE3FA\x94\xEE'\xF0\xB2\x1A!\xB6>\\)\xF4\xD5\xCA#\xE5\e\xA6f5o{\xAA"
 
-An IV `$iv` is created of 16 random bytes and `$internalKey` is used as the
+An IV `$iv` is created with 16 random bytes and `$internalKey` is used as the
 key to encrypt 64 random bytes.
 The first 32 bytes of the result become `$encKey` and the last 32 bytes become
 `$macKey`.
@@ -37,6 +43,25 @@ A "CipherString" (a Bitwarden internal format) is created by joining the
 [encryption type](https://github.com/bitwarden/browser/blob/f1262147a33f302b5e569f13f56739f05bbec362/src/services/constantsService.js#L13-L21)
 (`0` for `AesCbc256_B64`), a dot, the Base64-encoded IV, and the Base64-encoded
 `$encKey` and `$macKey`, with the pipe (`|`) character to become `$key`.
+
+	def cipherString(enctype, iv, ct, mac)
+	  [ enctype.to_s + "." + iv, ct, mac ].reject{|p| !p }.join("|")
+	end
+
+	# encrypt random bytes with a key to make new encryption key
+	def makeEncKey(key)
+	  pt = OpenSSL::Random.random_bytes(64)
+	  iv = OpenSSL::Random.random_bytes(16)
+
+	  cipher = OpenSSL::Cipher.new "AES-256-CBC"
+	  cipher.encrypt
+	  cipher.key = key
+	  cipher.iv = iv
+	  ct = cipher.update(pt)
+	  ct << cipher.final
+
+	  return cipherString(0, Base64.strict_encode64(iv), Base64.strict_encode64(ct), nil)
+	end
 
 	irb> $key = makeEncKey($internalKey)
 	=> "0.uRcMe+Mc2nmOet4yWx9BwA==|PGQhpYUlTUq/vBEDj1KOHVMlTIH1eecMl0j80+Zu0VRVfFa7X/MWKdVM6OM/NfSZicFEwaLWqpyBlOrBXhR+trkX/dPRnfwJD2B93hnLNGQ="
@@ -50,6 +75,14 @@ verify the user account.
 This hash is created with 1 round of PBKDF2 over a password of
 `$internalKey` (which itself was created by 5000 rounds of (`$masterPassword`,
 `$email`)) and salt of `$masterPassword`.
+
+	# base64-encode a wrapped, stretched password+salt for signup/login
+	def hashedPassword(password, salt)
+	  key = makeKey(password, salt)
+	  Base64.strict_encode64(PBKDF2.new(:password => key, :salt => password,
+	    :iterations => 1, :key_length => 256/8,
+	    :hash_function => OpenSSL::Digest::SHA256).bin_string)
+	end
 
 	irb> $masterPasswordHash = hashedPassword("p4ssw0rd", "nobody@example.com")
 	=> "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo="
@@ -93,6 +126,41 @@ text, and MAC, then each part Base64-decoded.  The MAC is calculated using
 `$macKey` and securely compared to the presented MAC, and if equal, the cipher
 text is then decrypted using `$encKey`:
 
+	# compare two hmacs, with double hmac verification
+	# https://www.nccgroup.trust/us/about-us/newsroom-and-events/blog/2011/february/double-hmac-verification/
+	def macsEqual(macKey, mac1, mac2)
+	  hmac1 = OpenSSL::HMAC.digest(OpenSSL::Digest.new("SHA256"), macKey, mac1)
+	  hmac2 = OpenSSL::HMAC.digest(OpenSSL::Digest.new("SHA256"), macKey, mac2)
+	  return hmac1 == hmac2
+	end
+
+	# decrypt a CipherString and return plaintext
+	def decrypt(str, key, macKey)
+	  if str[0].to_i != 2
+	    raise "implement #{str[0].to_i} decryption"
+	  end
+
+	  # AesCbc256_HmacSha256_B64
+	  iv, ct, mac = str[2 .. -1].split("|", 3)
+
+	  iv = Base64.decode64(iv)
+	  ct = Base64.decode64(ct)
+	  mac = Base64.decode64(mac)
+
+	  cmac = OpenSSL::HMAC.digest(OpenSSL::Digest.new("SHA256"), macKey, iv + ct)
+	  if !macsEqual(macKey, mac, cmac)
+	    raise "invalid mac"
+	  end
+
+	  cipher = OpenSSL::Cipher.new "AES-256-CBC"
+	  cipher.decrypt
+	  cipher.iv = iv
+	  cipher.key = key
+	  pt = cipher.update(ct)
+	  pt << cipher.final
+	  pt
+	end
+
 	irb> decrypt("2.6DmdNKlm3a+9k/5DFg+pTg==|7q1Arwz/ZfKEx+fksV3yo0HMQdypHJvyiix6hzgF3gY=|7lSXqjfq5rD3/3ofNZVpgv1ags696B2XXJryiGjDZvk=", $encKey, $macKey)
 	=> "https://example.com/login"
 
@@ -102,6 +170,22 @@ The MAC `$mac` is computed over `($iv + $cipherText)`.
 `$iv`, `$cipherText`, and `$mac` are each Base64-encoded, joined by a pipe
 (`|`) character, and then appended to the type (`2`) and a dot to form a
 CipherString.
+
+	# encrypt+mac a value with a key and mac key and random iv, return cipherString
+	def encrypt(pt, key, macKey)
+	  iv = OpenSSL::Random.random_bytes(16)
+
+	  cipher = OpenSSL::Cipher.new "AES-256-CBC"
+	  cipher.encrypt
+	  cipher.key = key
+	  cipher.iv = iv
+	  ct = cipher.update(pt)
+	  ct << cipher.final
+
+	  mac = OpenSSL::HMAC.digest(OpenSSL::Digest.new("SHA256"), macKey, iv + ct)
+
+	  cipherString(2, Base64.strict_encode64(iv), Base64.strict_encode64(ct), Base64.strict_encode64(mac))
+	end
 
 	irb> encrypt("A secret note here...", $encKey, $macKey)
 	=> "2.NLkXMHtgR8u9azASR4XPOQ==|6/9QPcnoeQJDKBZTjcBAjVYJ7U/ArTch0hUSHZns6v8=|p55cl9FQK/Hef+7yzM7Cfe0w07q5hZI9tTbxupZepyM="
@@ -192,7 +276,7 @@ constant across logins.
 A successful login will have a `200` status and a JSON response:
 
 	{
-		"access_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IkJDMz[...](long random string)",
+		"access_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IkJDMz[...](JWT string)",
 		"expires_in": 3600,
 		"token_type": "Bearer",
 		"refresh_token": "28fb1911ef6db24025ce1bae5aa940e117eb09dfe609b425b69bff73d73c03bf",
@@ -239,7 +323,7 @@ Upon successful login to an account with 2FA, additional `PrivateKey` and
 `TwoFactorToken` values are sent, but I'm not sure what these are for.
 
 	{
-		"access_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IkJDMz[...](long string)",
+		"access_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IkJDMz[...](JWT string)",
 		"expires_in": 3600,
 		"token_type": "Bearer",
 		"refresh_token": "28fb1911ef6db24025ce1bae5aa940e117eb09dfe609b425b69bff73d73c03bf",
@@ -250,6 +334,10 @@ Upon successful login to an account with 2FA, additional `PrivateKey` and
 
 The `access_token`, `refresh_token`, and `expires_in` values must be stored
 and used for further API access.
+`$access_token` must be a
+[JWT](https://jwt.io/)
+string, which the browser extension decodes and parses, and must have at least
+`nbf`, `exp`, `iss`, `sub`, `email`, `name`, `premium`, and `iss` keys.
 `$access_token` is sent as the `Authentication` header for up to `$expires_in`
 seconds, after which the `$refresh_token` will need to be sent back to the
 identity server to get a new `$access_token`.
@@ -262,7 +350,7 @@ objects from the server and updates its local database.
 Issue a `GET` to `$baseURL/sync` with an `Authorization` header of the
 `$access_token`.
 
-	GET $baseURL(base url)/sync
+	GET $baseURL/sync
 	Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IkJDMz(rest of $access_token)
 
 A successful response will contain a JSON body with `Profile`, `Folders`,
