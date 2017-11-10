@@ -1,0 +1,4 @@
+.bundle
+db.sqlite3
+jwt-rsa.key
+vendor/
