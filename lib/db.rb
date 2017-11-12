@@ -1,60 +1,125 @@
+#
+# Copyright (c) 2017 joshua stein <jcs@jcs.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+
 require "sqlite3"
 
 class Db
-  @@db = nil
+  class << self
+    attr_reader :db, :db_file
 
-  def self.db_file
-    "#{APP_ROOT}/db.sqlite3"
-  end
+    def connect(db_file)
+      @db_file = db_file
 
-  def self.connection
-    if @@db
-      return @@db
+      @db = SQLite3::Database.new(@db_file)
+
+      @db.execute("
+        CREATE TABLE IF NOT EXISTS
+        users
+        (uuid STRING PRIMARY KEY,
+        created_at DATETIME,
+        updated_at DATETIME,
+        email TEXT UNIQUE,
+        email_verified BOOLEAN,
+        premium BOOLEAN,
+        name TEXT,
+        password_hash TEXT,
+        password_hint TEXT,
+        key TEXT,
+        private_key BLOB,
+        public_key BLOB,
+        totp_secret STRING,
+        security_stamp STRING,
+        culture STRING)
+      ")
+
+      @db.execute("
+        CREATE TABLE IF NOT EXISTS
+        devices
+        (uuid STRING PRIMARY KEY,
+        created_at DATETIME,
+        updated_at DATETIME,
+        user_uuid STRING,
+        name STRING,
+        type INTEGER,
+        push_token STRING UNIQUE,
+        access_token STRING UNIQUE,
+        refresh_token STRING UNIQUE,
+        token_expires_at DATETIME)
+      ")
+
+      @db.execute("
+        CREATE TABLE IF NOT EXISTS
+        ciphers
+        (uuid STRING PRIMARY KEY,
+        created_at DATETIME,
+        updated_at DATETIME,
+        user_uuid STRING,
+        folder_uuid STRING,
+        organization_uuid STRING,
+        type INTEGER,
+        data BLOB,
+        favorite BOOLEAN,
+        attachments BLOB)
+      ")
+
+      @db.results_as_hash = true
+
+      @db.execute("
+        CREATE TABLE IF NOT EXISTS
+        schema_version
+        (version INTEGER)
+      ")
+
+      v = @db.execute("SELECT version FROM schema_version").first
+      if !v
+        v = { "version" => 0 }
+      end
+
+      case v["version"]
+      when 0
+        @db.execute("INSERT INTO schema_version (version) VALUES (1)")
+      end
+
+      # eagerly cache column definitions
+      ObjectSpace.each_object(Class).each do |klass|
+        if klass < DBModel
+          klass.fetch_columns
+        end
+      end
+
+      @db
     end
 
-    @@db = SQLite3::Database.new(self.db_file)
+    def connection
+      @db
+    end
 
-    @@db.execute("
-      CREATE TABLE IF NOT EXISTS
-      users
-      (id INTEGER PRIMARY KEY ASC,
-      email TEXT UNIQUE,
-      name TEXT,
-      password_hash TEXT,
-      key TEXT,
-      totp_secret STRING,
-      security_stamp STRING,
-      culture STRING)
-    ")
+    def execute(query, params = [])
+      caster = proc{|a|
+        if a.is_a?(String) && a.encoding != Encoding::BINARY
+          a = a.encode(Encoding::UTF_8)
+        elsif a.is_a?(TrueClass) || a.is_a?(FalseClass)
+          a = (a ? 1 : 0)
+        end
+        a
+      }
 
-    @@db.execute("
-      CREATE TABLE IF NOT EXISTS
-      devices
-      (id INTEGER PRIMARY KEY ASC,
-      device_uuid STRING UNIQUE,
-      user_id INTEGER,
-      name STRING,
-      device_type INTEGER,
-      device_push_token STRING,
-      access_token STRING UNIQUE,
-      refresh_token STRING UNIQUE,
-      token_expiry INTEGER)
-    ")
-
-    @@db.execute("
-      CREATE TABLE IF NOT EXISTS
-      ciphers
-      (id INTEGER PRIMARY KEY ASC,
-      cipher_uuid STRING UNIQUE,
-      updated_at INTEGER,
-      user_id INTEGER,
-      data STRING,
-      cipher_type INTEGER,
-      cipher_attachments STRING)
-    ")
-
-    @@db.results_as_hash = true
-
-    @@db
+      self.connection.execute(*[
+        caster.call(query), params.map{|a| caster.call(a) }
+      ])
+    end
   end
 end

@@ -9,3 +9,6 @@ gem "rotp"
 gem "jwt"
 
 gem "sqlite3"
+
+gem "minitest"
+gem "rack-test"

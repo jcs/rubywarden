@@ -14,45 +14,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-class NilClass
-  def blank?
-    true
-  end
+require File.dirname(__FILE__) + "/lib/bitwarden_ruby.rb"
+require "#{APP_ROOT}/lib/api.rb"
 
-  def present?
-    false
-  end
-end
-
-class String
-  def blank?
-    self.strip == ""
-  end
-
-  def present?
-    !blank?
-  end
-
-  def timingsafe_equal_to(other)
-    if self.bytesize != other.bytesize
-      return false
-    end
-
-    bytes = self.unpack("C#{self.bytesize}")
-
-    res = 0
-    other.each_byte do |byte|
-      res |= byte ^ bytes.shift
-    end
-
-    res == 0
-  end
-
-  def ucfirst
-    if self.length == 0
-      ""
-    else
-      self[0].upcase << self[1 .. -1].to_s
-    end
-  end
-end
+run Sinatra::Application

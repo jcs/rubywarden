@@ -1,0 +1,167 @@
+require_relative "spec_helper.rb"
+
+@access_token = nil
+
+describe "cipher module" do
+  before do
+    post "/api/accounts/register", {
+      :name => nil,
+      :email => "api@example.com",
+      :masterPasswordHash => Bitwarden.hashPassword("asdf", "api@example.com"),
+      :masterPasswordHint => nil,
+      :key => Bitwarden.makeEncKey(
+        Bitwarden.makeKey("adsf", "api@example.com")
+      ),
+    }
+
+    post "/identity/connect/token", {
+      :grant_type => "password",
+      :username => "api@example.com",
+      :password => Bitwarden.hashPassword("asdf", "api@example.com"),
+      :scope => "api offline_access",
+      :client_id => "browser",
+      :deviceType => 3,
+      :deviceIdentifier => SecureRandom.uuid,
+      :deviceName => "firefox",
+      :devicePushToken => ""
+    }
+
+    @access_token = last_json_response["access_token"]
+  end
+
+  it "should not allow access with bogus bearer token" do
+    post_json "/api/ciphers", {
+      :type => 1,
+      :folderId => nil,
+      :organizationId => nil,
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+      :notes => nil,
+      :favorite => false,
+      :login => {
+        :uri => "2.T57BwAuV8ubIn/sZPbQC+A==|EhUSSpJWSzSYOdJ/AQzfXuUXxwzcs/6C4tOXqhWAqcM=|OWV2VIqLfoWPs9DiouXGUOtTEkVeklbtJQHkQFIXkC8=",
+        :username => "2.JbFkAEZPnuMm70cdP44wtA==|fsN6nbT+udGmOWv8K4otgw==|JbtwmNQa7/48KszT2hAdxpmJ6DRPZst0EDEZx5GzesI=",
+        :password => "2.e83hIsk6IRevSr/H1lvZhg==|48KNkSCoTacopXRmIZsbWg==|CIcWgNbaIN2ix2Fx1Gar6rWQeVeboehp4bioAwngr0o=",
+        :totp => nil
+      }
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token.upcase}",
+    }
+
+    last_response.status.wont_equal 200
+  end
+
+  it "should allow creating, updating, and deleting ciphers" do
+    post_json "/api/ciphers", {
+      :type => 1,
+      :folderId => nil,
+      :organizationId => nil,
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+      :notes => nil,
+      :favorite => false,
+      :login => {
+        :uri => "2.T57BwAuV8ubIn/sZPbQC+A==|EhUSSpJWSzSYOdJ/AQzfXuUXxwzcs/6C4tOXqhWAqcM=|OWV2VIqLfoWPs9DiouXGUOtTEkVeklbtJQHkQFIXkC8=",
+        :username => "2.JbFkAEZPnuMm70cdP44wtA==|fsN6nbT+udGmOWv8K4otgw==|JbtwmNQa7/48KszT2hAdxpmJ6DRPZst0EDEZx5GzesI=",
+        :password => "2.e83hIsk6IRevSr/H1lvZhg==|48KNkSCoTacopXRmIZsbWg==|CIcWgNbaIN2ix2Fx1Gar6rWQeVeboehp4bioAwngr0o=",
+        :totp => nil
+      }
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.must_equal 200
+    uuid = last_json_response["Id"]
+    uuid.to_s.wont_equal ""
+
+    c = Cipher.find_by_uuid(uuid)
+    c.wont_be_nil
+    c.uuid.must_equal uuid
+    JSON.parse(c.data)["Name"].must_equal "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io="
+
+    # update
+
+    ik = Bitwarden.makeKey("asdf", "api@example.com")
+    k = Bitwarden.makeEncKey(ik)
+    new_name = Bitwarden.encrypt("some new name", ik[0, 32], ik[32, 32]).to_s
+
+    put_json "/api/ciphers/#{uuid}", {
+      :type => 1,
+      :folderId => nil,
+      :organizationId => nil,
+      :name => new_name,
+      :notes => nil,
+      :favorite => false,
+      :login => {
+        :uri => "2.T57BwAuV8ubIn/sZPbQC+A==|EhUSSpJWSzSYOdJ/AQzfXuUXxwzcs/6C4tOXqhWAqcM=|OWV2VIqLfoWPs9DiouXGUOtTEkVeklbtJQHkQFIXkC8=",
+        :username => "2.JbFkAEZPnuMm70cdP44wtA==|fsN6nbT+udGmOWv8K4otgw==|JbtwmNQa7/48KszT2hAdxpmJ6DRPZst0EDEZx5GzesI=",
+        :password => "2.e83hIsk6IRevSr/H1lvZhg==|48KNkSCoTacopXRmIZsbWg==|CIcWgNbaIN2ix2Fx1Gar6rWQeVeboehp4bioAwngr0o=",
+        :totp => nil
+      }
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.must_equal 200
+    last_json_response["Id"].to_s.wont_equal ""
+
+    c = Cipher.find_by_uuid(last_json_response["Id"])
+    JSON.parse(c.data)["Name"].must_equal new_name
+
+    uuid = c.uuid
+
+    # delete
+
+    delete_json "/api/ciphers/#{uuid}", {}, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+    last_response.status.must_equal 200
+
+    Cipher.find_by_uuid(uuid).must_be_nil
+  end
+
+  it "should not allow creating, updating, or deleting bogus ciphers" do
+    post_json "/api/ciphers", {
+      :type => -5,
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.wont_equal 200
+
+    # create, then bogus update
+
+    post_json "/api/ciphers", {
+      :type => 1,
+      :folderId => nil,
+      :organizationId => nil,
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+      :notes => nil,
+      :favorite => false,
+      :login => {
+        :uri => "2.T57BwAuV8ubIn/sZPbQC+A==|EhUSSpJWSzSYOdJ/AQzfXuUXxwzcs/6C4tOXqhWAqcM=|OWV2VIqLfoWPs9DiouXGUOtTEkVeklbtJQHkQFIXkC8=",
+        :username => "2.JbFkAEZPnuMm70cdP44wtA==|fsN6nbT+udGmOWv8K4otgw==|JbtwmNQa7/48KszT2hAdxpmJ6DRPZst0EDEZx5GzesI=",
+        :password => "2.e83hIsk6IRevSr/H1lvZhg==|48KNkSCoTacopXRmIZsbWg==|CIcWgNbaIN2ix2Fx1Gar6rWQeVeboehp4bioAwngr0o=",
+        :totp => nil
+      }
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.must_equal 200
+    uuid = last_json_response["Id"]
+
+    put_json "/api/ciphers/#{uuid}", {
+      :type => -5,
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.wont_equal 200
+
+    # bogus delete
+
+    delete_json "/api/ciphers/something-bogus", {}, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+    last_response.status.wont_equal 200
+  end
+end

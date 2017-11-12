@@ -8,7 +8,7 @@ encryption and decryption is implemented.
 
 The following notes were made by analyzing traffic between the Firefox
 extension and the Bitwarden servers by running
-[mitm.rb](mitm.rb)
+[tools/mitm.rb](mitm.rb)
 and having the Firefox extension use `http://127.0.0.1:4567/` as its
 base URL.
 

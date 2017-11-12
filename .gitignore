@@ -1,4 +1,4 @@
 .bundle
-db.sqlite3
+db/*.sqlite3
 jwt-rsa.key
 vendor/
