@@ -491,19 +491,6 @@ cipher data:
 		"Object": "cipher"
 	}
 
-### Icons
-
-Each login cipher can show an icon (favicon) for its URL, which is fetched via
-Bitwarden's servers (presumably for caching).
-
-To fetch an icon for a URL, issue an unauthenticated `GET` to
-`$iconURL/(domain)/icon.png`:
-
-	GET $iconURL/google.com/icon.png
-	(no authentication header)
-
-The binary response will contain the icon.
-
 ### Updating an item
 
 Send a `PUT` request to `$baseURL/ciphers/(cipher UUID)`:
@@ -534,3 +521,16 @@ Send an empty `DELETE` request to `$baseURL/ciphers/(cipher UUID)`:
 	Authorization: Bearer (access_token)
 
 A successful but zero-length response will be returned.
+
+### Icons
+
+Each login cipher can show an icon (favicon) for its URL, which is fetched via
+Bitwarden's servers (presumably for caching).
+
+To fetch an icon for a URL, issue an unauthenticated `GET` to
+`$iconURL/(domain)/icon.png`:
+
+	GET $iconURL/google.com/icon.png
+	(no authentication header)
+
+The binary response will contain the icon.
