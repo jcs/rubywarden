@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 gem "sinatra"
 gem "sinatra-contrib"
+gem "unicorn"
 gem "json"
 
 gem "pbkdf2-ruby"
