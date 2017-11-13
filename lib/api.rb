@@ -61,6 +61,12 @@ before do
     end
   end
 
+  # some bitwarden apps send params with uppercased first letter, some all
+  # lowercase.  just standardize on all lowercase.
+  params.keys.each do |k|
+    params[k.downcase.to_sym] = params.delete(k)
+  end
+
   # we're always going to reply with json
   content_type :json
 end
@@ -88,9 +94,9 @@ namespace IDENTITY_BASE_URL do
       need_params(
         :client_id,
         :grant_type,
-        :deviceIdentifier,
-        :deviceName,
-        :deviceType,
+        :deviceidentifier,
+        :devicename,
+        :devicetype,
         :password,
         :scope,
         :username,
@@ -112,8 +118,8 @@ namespace IDENTITY_BASE_URL do
       end
 
       if u.two_factor_enabled? &&
-      (params[:twoFactorToken].blank? ||
-      !u.verifies_totp_code?(params[:twoFactorToken]))
+      (params[:twofactortoken].blank? ||
+      !u.verifies_totp_code?(params[:twofactortoken]))
         return [ 400, {
           "error" => "invalid_grant",
           "error_description" => "Two factor required.",
@@ -122,7 +128,7 @@ namespace IDENTITY_BASE_URL do
         }.to_json ]
       end
 
-      d = Device.find_by_uuid(params[:deviceIdentifier])
+      d = Device.find_by_uuid(params[:deviceidentifier])
       if d && d.user_uuid != u.uuid
         # wat
         d.destroy
@@ -132,13 +138,13 @@ namespace IDENTITY_BASE_URL do
       if !d
         d = Device.new
         d.user_uuid = u.uuid
-        d.uuid = params[:deviceIdentifier]
+        d.uuid = params[:deviceidentifier]
       end
 
-      d.type = params[:deviceType]
-      d.name = params[:deviceName]
-      if params[:devicePushToken].present?
-        d.push_token = params[:devicePushToken]
+      d.type = params[:devicetype]
+      d.name = params[:devicename]
+      if params[:devicepushtoken].present?
+        d.push_token = params[:devicepushtoken]
       end
     else
       return validation_error("grant type not supported")
@@ -172,7 +178,7 @@ namespace BASE_URL do
       return validation_error("Signups are not permitted")
     end
 
-    need_params(:masterPasswordHash) do |p|
+    need_params(:masterpasswordhash) do |p|
       return validation_error("#{p} cannot be blank")
     end
 
@@ -199,8 +205,8 @@ namespace BASE_URL do
 
       u = User.new
       u.email = params[:email]
-      u.password_hash = params[:masterPasswordHash]
-      u.password_hint = params[:masterPasswordHint]
+      u.password_hash = params[:masterpasswordhash]
+      u.password_hint = params[:masterpasswordhint]
       u.key = params[:key]
 
       # is this supposed to come from somewhere?
@@ -256,8 +262,8 @@ namespace BASE_URL do
       return validation_error("Invalid name")
     end
 
-    if !params[:folderId].blank?
-      if !Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:folderId])
+    if !params[:folderid].blank?
+      if !Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:folderid])
         return validation_error("Invalid folder")
       end
     end
@@ -300,8 +306,8 @@ namespace BASE_URL do
       return validation_error("Invalid name")
     end
 
-    if !params[:folderId].blank?
-      if !Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:folderId])
+    if !params[:folderid].blank?
+      if !Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:folderid])
         return validation_error("Invalid folder")
       end
     end

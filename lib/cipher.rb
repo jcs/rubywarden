@@ -53,8 +53,8 @@ class Cipher < DBModel
   end
 
   def update_from_params(params)
-    self.folder_uuid = params[:folderId]
-    self.organization_uuid = params[:organizationId]
+    self.folder_uuid = params[:folderid]
+    self.organization_uuid = params[:organizationid]
     self.favorite = params[:favorite]
     self.type = params[:type].to_i
 
