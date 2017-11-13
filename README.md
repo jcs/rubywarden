@@ -5,13 +5,15 @@ project nor 8bit Solutions LLC.)*
 
 ## bitwarden-ruby
 
-A small, self-contained API server written in Ruby to provide a
+A small, self-contained API server written in Ruby and Sinatra to provide a
 private backend for the open-source
 [Bitwarden apps](https://github.com/bitwarden).
 
-Data is stored in a local SQLite database.
-This means you can easily run it locally and have your data never leave
-your device, or run it on your own web server via Rack and some front-end
+### Data
+
+All data is stored in a local SQLite database.
+This means you can easily run the server locally and have your data never
+leave your device, or run it on your own web server via Rack and some front-end
 HTTP server with TLS to support syncing across multiple devices.
 Backing up your data is as easy as copying the `db/production.sqlite3` file
 somewhere.
@@ -49,14 +51,18 @@ Run `bundle install` at least once.
 
 To run via Rack on port 4567:
 
-	env RACK_ENV=production bundle exec rackup config.ru
+	env RACK_ENV=production bundle exec rackup -p 4567 config.ru
 
 You'll probably want to run it once with signups enabled, to allow yourself
 to create an account:
 
-	env RACK_ENV=production ALLOW_SIGNUPS=1 bundle exec rackup config.ru
+	env RACK_ENV=production ALLOW_SIGNUPS=1 bundle exec rackup -p 4567 config.ru
 
-Run test suite:
+Once the server is running, the Bitwarden apps (such as the Firefox extension)
+can be configured to use your own Bitwarden server before login.
+For a local Rack instance, you can point it at `http://127.0.0.1:4567/`.
+
+To run the test suite:
 
 	bundle exec rake test
 
@@ -72,6 +78,9 @@ the conversion tool with your account e-mail address:
 
 It will prompt you for the master password you already created, and then
 convert and import as many items as it can.
+
+This tool operates on the SQLite database directly (not through its REST API)
+so you can run it offline.
 
 ### License
 
