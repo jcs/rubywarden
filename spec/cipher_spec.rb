@@ -164,4 +164,79 @@ describe "cipher module" do
     }
     last_response.status.wont_equal 200
   end
+
+  it "should allow assigning ciphers to valid folders" do
+    post_json "/api/ciphers", {
+      :type => 1,
+      :folderId => nil,
+      :organizationId => nil,
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+      :notes => nil,
+      :favorite => false,
+      :login => {
+        :uri => "2.T57BwAuV8ubIn/sZPbQC+A==|EhUSSpJWSzSYOdJ/AQzfXuUXxwzcs/6C4tOXqhWAqcM=|OWV2VIqLfoWPs9DiouXGUOtTEkVeklbtJQHkQFIXkC8=",
+        :username => "2.JbFkAEZPnuMm70cdP44wtA==|fsN6nbT+udGmOWv8K4otgw==|JbtwmNQa7/48KszT2hAdxpmJ6DRPZst0EDEZx5GzesI=",
+        :password => "2.e83hIsk6IRevSr/H1lvZhg==|48KNkSCoTacopXRmIZsbWg==|CIcWgNbaIN2ix2Fx1Gar6rWQeVeboehp4bioAwngr0o=",
+        :totp => nil
+      }
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.must_equal 200
+    uuid = last_json_response["Id"]
+
+    # create folder
+
+    post_json "/api/folders", {
+      :name => "2.tqb+y2z4ChCYHj4romVwGQ==|E8+D7aR5CNnd+jF7fdb9ow==|wELCxyy341G2F+w8bTb87PAUi6sdXeIFTFb4N8tk3E0=",
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.must_equal 200
+    folder_uuid = last_json_response["Id"]
+
+    # update to put in valid folder
+
+    put_json "/api/ciphers/#{uuid}", {
+      :type => 1,
+      :folderId => folder_uuid,
+      :organizationId => nil,
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+      :notes => nil,
+      :favorite => false,
+      :login => {
+        :uri => "2.T57BwAuV8ubIn/sZPbQC+A==|EhUSSpJWSzSYOdJ/AQzfXuUXxwzcs/6C4tOXqhWAqcM=|OWV2VIqLfoWPs9DiouXGUOtTEkVeklbtJQHkQFIXkC8=",
+        :username => "2.JbFkAEZPnuMm70cdP44wtA==|fsN6nbT+udGmOWv8K4otgw==|JbtwmNQa7/48KszT2hAdxpmJ6DRPZst0EDEZx5GzesI=",
+        :password => "2.e83hIsk6IRevSr/H1lvZhg==|48KNkSCoTacopXRmIZsbWg==|CIcWgNbaIN2ix2Fx1Gar6rWQeVeboehp4bioAwngr0o=",
+        :totp => nil
+      }
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.must_equal 200
+
+    # now assign to bogus folder
+
+    put_json "/api/ciphers/#{uuid}", {
+      :type => 1,
+      :folderId => folder_uuid.reverse,
+      :organizationId => nil,
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+      :notes => nil,
+      :favorite => false,
+      :login => {
+        :uri => "2.T57BwAuV8ubIn/sZPbQC+A==|EhUSSpJWSzSYOdJ/AQzfXuUXxwzcs/6C4tOXqhWAqcM=|OWV2VIqLfoWPs9DiouXGUOtTEkVeklbtJQHkQFIXkC8=",
+        :username => "2.JbFkAEZPnuMm70cdP44wtA==|fsN6nbT+udGmOWv8K4otgw==|JbtwmNQa7/48KszT2hAdxpmJ6DRPZst0EDEZx5GzesI=",
+        :password => "2.e83hIsk6IRevSr/H1lvZhg==|48KNkSCoTacopXRmIZsbWg==|CIcWgNbaIN2ix2Fx1Gar6rWQeVeboehp4bioAwngr0o=",
+        :totp => nil
+      }
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.wont_equal 200
+  end
 end

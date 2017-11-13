@@ -374,6 +374,12 @@ A successful response will contain a JSON body with `Profile`, `Folders`,
 			"Object": "profile"
 		},
 		"Folders": [
+			{
+				"Id": "14220912-d002-471d-a364-a82a010cb8f2",
+				"Name": "2.tqb+y2z4ChCYHj4romVwGQ==|E8+D7aR5CNnd+jF7fdb9ow==|wELCxyy341G2F+w8bTb87PAUi6sdXeIFTFb4N8tk3E0=",
+				"RevisionDate": "2017-11-13T16:20:56.5633333",
+				"Object": "folder"
+			}
 		],
 		"Ciphers": [
 			{
@@ -521,6 +527,33 @@ Send an empty `DELETE` request to `$baseURL/ciphers/(cipher UUID)`:
 	Authorization: Bearer (access_token)
 
 A successful but zero-length response will be returned.
+
+### Folders
+
+To create a folder, `POST` to `$baseURL/folders`:
+
+	POST $baseURL/folders
+	Content-type: application/json
+	Authorization: Bearer $access_token
+
+	{
+		"name": "2.FQAwIBaDbczEGnEJw4g4hw==|7KreXaC0duAj0ulzZJ8ncA==|nu2sEvotjd4zusvGF8YZJPnS9SiJPDqc1VIfCrfve/o="
+	}
+
+JSON response:
+
+	{
+		"Id": "14220912-d002-471d-a364-a82a010cb8f2",
+		"Name": "2.FQAwIBaDbczEGnEJw4g4hw==|7KreXaC0duAj0ulzZJ8ncA==|nu2sEvotjd4zusvGF8YZJPnS9SiJPDqc1VIfCrfve/o=",
+		"RevisionDate": "2017-11-13T16:18:23.3078169Z",
+		"Object": "folder"
+	}
+
+To rename a folder, `PUT` to `$baseURL/folders/(folder UUID)` with the
+same structure as the `POST`, and get the same result.
+
+To delete a folder, `DELETE` to `$baseURL/folders/(folder UUID)` and get a
+successful, zero-length response.
 
 ### Icons
 

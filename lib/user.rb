@@ -42,6 +42,11 @@ class User < DBModel
     Bitwarden.encrypt(data, encKey[0, 32], encKey[32, 32])
   end
 
+  def folders
+    @folders ||= Folder.find_all_by_user_uuid(self.uuid).
+      each{|f| f.user = self }
+  end
+
   def has_password_hash?(hash)
     self.password_hash.timingsafe_equal_to(hash)
   end

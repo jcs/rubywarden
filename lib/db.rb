@@ -75,6 +75,16 @@ class Db
         attachments BLOB)
       ")
 
+      @db.execute("
+        CREATE TABLE IF NOT EXISTS
+        folders
+        (uuid STRING PRIMARY KEY,
+        created_at DATETIME,
+        updated_at DATETIME,
+        user_uuid STRING,
+        name BLOB)
+      ")
+
       @db.results_as_hash = true
 
       @db.execute("
@@ -91,6 +101,19 @@ class Db
       case v["version"]
       when 0
         @db.execute("INSERT INTO schema_version (version) VALUES (1)")
+
+      when 1
+        @db.execute("
+          CREATE TABLE IF NOT EXISTS
+          folders
+          (uuid STRING PRIMARY KEY,
+          created_at DATETIME,
+          updated_at DATETIME,
+          user_uuid STRING,
+          name BLOB)
+        ")
+
+        @db.execute("UPDATE schema_version SET version = 2")
       end
 
       # eagerly cache column definitions

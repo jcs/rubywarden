@@ -185,10 +185,8 @@ namespace BASE_URL do
     end
 
     begin
-      if !Bitwarden::CipherString.parse(params[:key])
-        raise
-      end
-    rescue
+      Bitwarden::CipherString.parse(params[:key])
+    rescue Bitwarden::InvalidCipherString
       return validation_error("Invalid key")
     end
 
@@ -228,16 +226,18 @@ namespace BASE_URL do
 
     {
       "Profile" => d.user.to_hash,
-      "Folders" => [],
-      "Ciphers" => d.user.ciphers.map{|c|
-        c.to_hash
-      },
+      "Folders" => d.user.folders.map{|f| f.to_hash },
+      "Ciphers" => d.user.ciphers.map{|c| c.to_hash },
       "Domains" => {
         "Object" => "domains"
       },
       "Object" => "sync"
     }.to_json
   end
+
+  #
+  # ciphers
+  #
 
   # create a new cipher
 	post "/ciphers" do
@@ -248,6 +248,18 @@ namespace BASE_URL do
 
     need_params(:type, :name) do |p|
       return validation_error("#{p} cannot be blank")
+    end
+
+    begin
+      Bitwarden::CipherString.parse(params[:name])
+    rescue Bitwarden::InvalidCipherString
+      return validation_error("Invalid name")
+    end
+
+    if !params[:folderId].blank?
+      if !Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:folderId])
+        return validation_error("Invalid folder")
+      end
     end
 
     c = Cipher.new
@@ -273,16 +285,25 @@ namespace BASE_URL do
     end
 
     c = nil
-    if params[:uuid].blank? || !(c = Cipher.find_by_uuid(params[:uuid]))
-      return validation_error("invalid cipher")
-    end
-
-    if c.user_uuid != d.user_uuid
+    if params[:uuid].blank? ||
+    !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
       return validation_error("invalid cipher")
     end
 
     need_params(:type, :name) do |p|
       return validation_error("#{p} cannot be blank")
+    end
+
+    begin
+      Bitwarden::CipherString.parse(params[:name])
+    rescue Bitwarden::InvalidCipherString
+      return validation_error("Invalid name")
+    end
+
+    if !params[:folderId].blank?
+      if !Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:folderId])
+        return validation_error("Invalid folder")
+      end
     end
 
     c.update_from_params(params)
@@ -306,15 +327,98 @@ namespace BASE_URL do
     end
 
     c = nil
-    if params[:uuid].blank? || !(c = Cipher.find_by_uuid(params[:uuid]))
-      return validation_error("invalid cipher")
-    end
-
-    if c.user_uuid != d.user_uuid
+    if params[:uuid].blank? ||
+    !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
       return validation_error("invalid cipher")
     end
 
     c.destroy
+
+    ""
+  end
+
+  #
+  # folders
+  #
+
+  # create a new folder
+	post "/folders" do
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+
+    need_params(:name) do |p|
+      return validation_error("#{p} cannot be blank")
+    end
+
+    begin
+      Bitwarden::CipherString.parse(params[:name])
+    rescue
+      return validation_error("Invalid name")
+    end
+
+    f = Folder.new
+    f.user_uuid = d.user_uuid
+    f.update_from_params(params)
+
+    Folder.transaction do
+      if !f.save
+        return validation_error("error saving")
+      end
+
+      f.to_hash.to_json
+    end
+  end
+
+  # rename a folder
+  put "/folders/:uuid" do
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+
+    f = nil
+    if params[:uuid].blank? ||
+    !(f = Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
+      return validation_error("invalid folder")
+    end
+
+    need_params(:name) do |p|
+      return validation_error("#{p} cannot be blank")
+    end
+
+    begin
+      Bitwarden::CipherString.parse(params[:name])
+    rescue
+      return validation_error("Invalid name")
+    end
+
+    f.update_from_params(params)
+
+    Folder.transaction do
+      if !f.save
+        return validation_error("error saving")
+      end
+
+      f.to_hash.to_json
+    end
+  end
+
+  # delete a folder
+	delete "/folders/:uuid" do
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+
+    f = nil
+    if params[:uuid].blank? ||
+    !(f = Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
+      return validation_error("invalid folder")
+    end
+
+    f.destroy
 
     ""
   end

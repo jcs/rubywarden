@@ -20,9 +20,9 @@ class DBModel
 
     def method_missing(method, *args, &block)
       if m = method.to_s.match(/^find_by_(.+)/)
-        return find_by_column(m[1], args[0])
+        return find_by_column(m[1].split("_and_"), args)
       elsif m = method.to_s.match(/^find_all_by_(.+)/)
-        return find_all_by_column(m[1], args[0])
+        return find_all_by_column(m[1].split("_and_"), args)
       else
         super
       end
@@ -69,11 +69,18 @@ class DBModel
       attr_accessor *(columns.keys)
     end
 
-    def find_all_by_column(column, value, limit = nil)
+    def find_all_by_column(columns, values, limit = nil)
       fetch_columns
 
-      Db.execute("SELECT * FROM `#{table_name}` WHERE " <<
-      "`#{column}` = ? #{limit}", [ value.encode("utf-8") ]).map do |rec|
+      if columns.count != values.count
+        raise "arg mismatch: #{columns.inspect} vs #{values.inspect}"
+      end
+
+      where = columns.map{|c| "`#{c}` = ?" }.join(" AND ")
+      values = values.map{|v| v.is_a?(String) ? v.encode("utf-8") : v }
+
+      Db.execute("SELECT * FROM `#{table_name}` WHERE #{where} #{limit}",
+      values).map do |rec|
         obj = self.new
         obj.new_record = false
 
@@ -86,8 +93,8 @@ class DBModel
       end
     end
 
-    def find_by_column(column, value)
-      find_all_by_column(column, value, "LIMIT 1").first
+    def find_by_column(columns, values)
+      find_all_by_column(columns, values, "LIMIT 1").first
     end
 
     def primary_key
