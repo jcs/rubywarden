@@ -108,18 +108,10 @@ class Db
     end
 
     def execute(query, params = [])
-      caster = proc{|a|
-        if a.is_a?(String) && a.encoding != Encoding::BINARY
-          a = a.encode(Encoding::UTF_8)
-        elsif a.is_a?(TrueClass) || a.is_a?(FalseClass)
-          a = (a ? 1 : 0)
-        end
-        a
-      }
+      # debug point:
+      # STDERR.puts(([ query ] + params).inspect)
 
-      self.connection.execute(*[
-        caster.call(query), params.map{|a| caster.call(a) }
-      ])
+      self.connection.execute(query, params)
     end
   end
 end

@@ -90,13 +90,21 @@ class Bitwarden
     # decrypt a CipherString and return plaintext
     def decrypt(str, key, macKey)
       c = CipherString.parse(str)
+      iv = Base64.decode64(c.iv)
+      ct = Base64.decode64(c.ct)
+      mac = c.mac ? Base64.decode64(c.mac) : nil
 
       case c.type
-      when CipherString::TYPE_AESCBC256_HMACSHA256_B64
-        iv = Base64.decode64(c.iv)
-        ct = Base64.decode64(c.ct)
-        mac = Base64.decode64(c.mac)
+      when CipherString::TYPE_AESCBC256_B64
+        cipher = OpenSSL::Cipher.new "AES-256-CBC"
+        cipher.decrypt
+        cipher.iv = iv
+        cipher.key = key
+        pt = cipher.update(ct)
+        pt << cipher.final
+        return pt
 
+      when CipherString::TYPE_AESCBC256_HMACSHA256_B64
         cmac = OpenSSL::HMAC.digest(OpenSSL::Digest.new("SHA256"),
           macKey, iv + ct)
         if !self.macsEqual(macKey, mac, cmac)

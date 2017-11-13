@@ -24,6 +24,19 @@ class Cipher < DBModel
   TYPE_NOTE  = 2
   TYPE_CARD  = 3
 
+  def self.type_s(type)
+    case type
+    when TYPE_LOGIN
+      "login"
+    when TYPE_NOTE
+      "note"
+    when TYPE_CARD
+      "card"
+    else
+      type.to_s
+    end
+  end
+
   def to_hash
     {
       "Id" => self.uuid,

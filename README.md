@@ -25,22 +25,35 @@ documentation available other than the
 [.NET Bitwarden code](https://github.com/bitwarden/core)
 itself.
 
-## Usage
+### Usage
 
 Run `bundle install` at least once.
 
 To run via Rack on port 4567:
 
-	env RAILS_ENV=production bundle exec rackup config.ru
+	env RACK_ENV=production bundle exec rackup config.ru
 
 You'll probably want to run it once with signups enabled, to allow yourself
 to create an account:
 
-	env RAILS_ENV=production ALLOW_SIGNUPS=1 bundle exec rackup config.ru
+	env RACK_ENV=production ALLOW_SIGNUPS=1 bundle exec rackup config.ru
 
 Run test suite:
 
 	bundle exec rake test
+
+### 1Password Conversion
+
+Export everything from 1Password in its "1Password Interchange Format".
+It should create a directory with a `data.1pif` file (which is unencrypted, so
+be careful with it).
+Once you have created your initial user account through `bitwarden-ruby`, run
+the conversion tool with your account e-mail address:
+
+	env RACK_ENV=production bundle exec ruby tools/1password_import.rb -f /path/to/data.1pif -u you@example.com
+
+It will prompt you for the master password you already created, and then
+convert and import as many items as it can.
 
 ### License
 

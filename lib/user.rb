@@ -34,6 +34,14 @@ class User < DBModel
       each{|d| d.user = self }
   end
 
+  def encrypt_data_with_master_password_key(data, mk)
+    # self.key is random data encrypted with the key of (password,email), so
+    # create that key and decrypt the random data to get the original
+    # encryption key, then use that key to encrypt the data
+    encKey = Bitwarden.decrypt(self.key, mk[0, 32], mk[32, 32])
+    Bitwarden.encrypt(data, encKey[0, 32], encKey[32, 32])
+  end
+
   def has_password_hash?(hash)
     self.password_hash.timingsafe_equal_to(hash)
   end
