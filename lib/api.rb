@@ -321,11 +321,9 @@ namespace BASE_URL do
 end
 
 namespace ICONS_URL do
-  get "/icons/:domain/icon.png" do
-    content_type "image/x-icon"
+  get "/:domain/icon.png" do
+    # TODO: do this service ourselves
 
-    # TODO
-
-    ""
+    redirect "http://#{params[:domain]}/favicon.ico"
   end
 end
