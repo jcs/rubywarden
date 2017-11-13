@@ -235,9 +235,11 @@ namespace BASE_URL do
       "Folders" => d.user.folders.map{|f| f.to_hash },
       "Ciphers" => d.user.ciphers.map{|c| c.to_hash },
       "Domains" => {
-        "Object" => "domains"
+        "EquivalentDomains" => nil,
+        "GlobalEquivalentDomains" => [],
+        "Object" => "domains",
       },
-      "Object" => "sync"
+      "Object" => "sync",
     }.to_json
   end
 
@@ -427,6 +429,46 @@ namespace BASE_URL do
     f.destroy
 
     ""
+  end
+
+  #
+  # device push tokens
+  #
+
+  put "/devices/identifier/:uuid/clear-token" do
+    # XXX: for some reason, the iOS app doesn't send an Authorization header
+    # for this
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+
+    d.push_token = nil
+
+    Device.transaction do
+      if !d.save
+        return validation_error("error saving")
+      end
+
+      ""
+    end
+  end
+
+  put "/devices/identifier/:uuid/token" do
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+
+    d.push_token = params[:pushtoken]
+
+    Device.transaction do
+      if !d.save
+        return validation_error("error saving")
+      end
+
+      ""
+    end
   end
 end
 
