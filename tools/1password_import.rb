@@ -33,22 +33,26 @@ if !file || !username
   usage
 end
 
-u = User.find_by_email(username)
-if !u
+@u = User.find_by_email(username)
+if !@u
   raise "can't find existing User record for #{username.inspect}"
 end
 
-print "master password for #{u.email}: "
+print "master password for #{@u.email}: "
 system("stty -echo")
 password = STDIN.gets.chomp
 system("stty echo")
 print "\n"
 
-if !u.has_password_hash?(Bitwarden.hashPassword(password, username))
+if !@u.has_password_hash?(Bitwarden.hashPassword(password, username))
   raise "master password does not match stored hash"
 end
 
-master_key = Bitwarden.makeKey(password, u.email)
+@master_key = Bitwarden.makeKey(password, @u.email)
+
+def encrypt(str)
+  @u.encrypt_data_with_master_password_key(str, @master_key)
+end
 
 to_save = {}
 skipped = 0
@@ -58,11 +62,13 @@ File.read(file).split("\n").each do |line|
   i = JSON.parse(line)
 
   c = Cipher.new
-  c.user_uuid = u.uuid
+  c.user_uuid = @u.uuid
   c.type = Cipher::TYPE_LOGIN
   c.favorite = (i["openContents"] && i["openContents"]["faveIndex"])
 
-  cdata = { "Name" => (i["title"].blank? ? "--" : i["title"]) }
+  cdata = {
+    "Name" => encrypt(i["title"].blank? ? "--" : i["title"]),
+  }
 
   if i["createdAt"]
     c.created_at = Time.at(i["createdAt"].to_i)
@@ -74,7 +80,7 @@ File.read(file).split("\n").each do |line|
   case i["typeName"]
   when "passwords.Password"
     if i["location"].present?
-      cdata["Uri"] = i["location"]
+      cdata["Uri"] = encrypt(i["location"])
     end
 
   when "securenotes.SecureNote"
@@ -82,33 +88,33 @@ File.read(file).split("\n").each do |line|
     cdata["SecureNote"] = { "Type" => 0 }
 
   when "wallet.computer.Router"
-    cdata["Password"] = i["secureContents"]["wireless_password"]
+    cdata["Password"] = encrypt(i["secureContents"]["wireless_password"])
 
   when "wallet.financial.CreditCard"
     c.type = Cipher::TYPE_CARD
 
     if i["secureContents"]["cardholder"].present?
-      cdata["CardholderName"] = i["secureContents"]["cardholder"]
+      cdata["CardholderName"] = encrypt(i["secureContents"]["cardholder"])
     end
     if i["secureContents"]["cardholder"].present?
-      cdata["Brand"] = i["secureContents"]["type"]
+      cdata["Brand"] = encrypt(i["secureContents"]["type"])
     end
     if i["secureContents"]["ccnum"].present?
-      cdata["Number"] = i["secureContents"]["ccnum"]
+      cdata["Number"] = encrypt(i["secureContents"]["ccnum"])
     end
     if i["secureContents"]["expiry_mm"].present?
-      cdata["expMonth"] = i["secureContents"]["expiry_mm"]
+      cdata["ExpMonth"] = encrypt(i["secureContents"]["expiry_mm"])
     end
     if i["secureContents"]["expiry_yy"].present?
-      cdata["expYear"] = i["secureContents"]["expiry_yy"]
+      cdata["ExpYear"] = encrypt(i["secureContents"]["expiry_yy"])
     end
     if i["secureContents"]["cvv"].present?
-      cdata["Code"] = i["secureContents"]["cvv"]
+      cdata["Code"] = encrypt(i["secureContents"]["cvv"])
     end
 
   when "webforms.WebForm"
     if i["location"].present?
-      cdata["Uri"] = i["location"]
+      cdata["Uri"] = encrypt(i["location"])
     end
 
   when "identities.Identity",
@@ -126,48 +132,40 @@ File.read(file).split("\n").each do |line|
 
   if i["secureContents"]
     if i["secureContents"]["notesPlain"].present?
-      cdata["Notes"] = i["secureContents"]["notesPlain"]
+      cdata["Notes"] = encrypt(i["secureContents"]["notesPlain"])
     end
 
     if i["secureContents"]["password"].present?
-      cdata["Password"] = i["secureContents"]["password"]
+      cdata["Password"] = encrypt(i["secureContents"]["password"])
     end
 
     if i["secureContents"]["fields"]
-      cdata["Fields"] = {}
+      cdata["Fields"] = []
 
       i["secureContents"]["fields"].each do |field|
         case field["designation"]
         when "username"
           if c.type == Cipher::TYPE_LOGIN && cdata["Username"].blank? &&
           field["value"].present?
-            cdata["Username"] = field["value"]
+            cdata["Username"] = encrypt(field["value"])
           end
 
         when "password"
           if c.type == Cipher::TYPE_LOGIN && cdata["Password"].blank? &&
           field["value"].present?
-            cdata["Password"] = field["value"]
+            cdata["Password"] = encrypt(field["value"])
           end
 
         else
           if field["name"].present? && field["value"].present?
-            cdata["Fields"][field["name"]] = field["value"]
+            cdata["Fields"].push({
+              "Type" => 0, # text
+              "Name" => encrypt(field["name"]),
+              "Value" => encrypt(field["value"]),
+            })
           end
         end
       end
-    end
-  end
-
-  # encrypt all cdata contents
-  cdata.each do |k,v|
-    if v.is_a?(Hash)
-      v.each do |kk,vv|
-        cdata[k][kk] = u.encrypt_data_with_master_password_key(vv.to_s,
-          master_key)
-      end
-    else
-      cdata[k] = u.encrypt_data_with_master_password_key(v.to_s, master_key)
     end
   end
 
