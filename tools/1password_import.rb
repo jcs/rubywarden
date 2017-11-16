@@ -1,4 +1,29 @@
 #!/usr/bin/env ruby
+#
+# Copyright (c) 2017 joshua stein <jcs@jcs.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+
+#
+# Read a given 1Password Interchange Format (1pif) file, ask for the given
+# user's master password, then lookup the given user in the bitwarden-ruby
+# SQLite database and fetch its key.  Each 1Password password entry is
+# encrypted and inserted into the database.
+#
+# No check is done to eliminate duplicates, so this is best used on a fresh
+# bitwarden-ruby installation after creating a new account.
+#
 
 require File.realpath(File.dirname(__FILE__) + "/../lib/bitwarden_ruby.rb")
 require "getoptlong"
@@ -157,6 +182,13 @@ File.read(file).split("\n").each do |line|
           end
 
         else
+          if field["name"].present? && field["name"].match(/password/i)
+            # ignore this field, as it's probably a duplicate of the password
+            # field and will cause the apps to show it in plaintext rather than
+            # as a masked password field
+            next
+          end
+
           if field["name"].present? && field["value"].present?
             cdata["Fields"].push({
               "Type" => 0, # text
