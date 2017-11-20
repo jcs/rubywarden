@@ -248,7 +248,7 @@ namespace BASE_URL do
   #
 
   # create a new cipher
-	post "/ciphers" do
+  post "/ciphers" do
     d = device_from_bearer
     if !d
       return validation_error("invalid bearer")
@@ -286,7 +286,7 @@ namespace BASE_URL do
   end
 
   # update a cipher
-	put "/ciphers/:uuid" do
+  put "/ciphers/:uuid" do
     d = device_from_bearer
     if !d
       return validation_error("invalid bearer")
@@ -328,7 +328,7 @@ namespace BASE_URL do
   end
 
   # delete a cipher
-	delete "/ciphers/:uuid" do
+  delete "/ciphers/:uuid" do
     d = device_from_bearer
     if !d
       return validation_error("invalid bearer")
@@ -350,7 +350,7 @@ namespace BASE_URL do
   #
 
   # create a new folder
-	post "/folders" do
+  post "/folders" do
     d = device_from_bearer
     if !d
       return validation_error("invalid bearer")
@@ -414,7 +414,7 @@ namespace BASE_URL do
   end
 
   # delete a folder
-	delete "/folders/:uuid" do
+  delete "/folders/:uuid" do
     d = device_from_bearer
     if !d
       return validation_error("invalid bearer")
