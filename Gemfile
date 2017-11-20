@@ -13,6 +13,10 @@ gem "jwt"
 
 gem "sqlite3"
 
+# for tools/activate_totp.rb
+gem "rqrcode"
+
+# for testing
 gem "rake"
 gem "minitest"
 gem "rack-test"

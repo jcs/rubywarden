@@ -78,6 +78,6 @@ class User < DBModel
   end
 
   def verifies_totp_code?(code)
-    ROTP::TOTP.new(self.totp_secret).now == code.to_i
+    ROTP::TOTP.new(self.totp_secret).now == code.to_s
   end
 end
