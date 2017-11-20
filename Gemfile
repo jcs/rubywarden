@@ -11,5 +11,6 @@ gem "jwt"
 
 gem "sqlite3"
 
+gem "rake"
 gem "minitest"
 gem "rack-test"

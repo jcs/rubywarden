@@ -15,6 +15,7 @@ GEM
     rack-test (0.7.0)
       rack (>= 1.0, < 3)
     raindrops (0.19.0)
+    rake (12.3.0)
     rotp (3.3.0)
     sinatra (2.0.0)
       mustermann (~> 1.0)
@@ -43,6 +44,7 @@ DEPENDENCIES
   minitest
   pbkdf2-ruby
   rack-test
+  rake
   rotp
   sinatra
   sinatra-contrib
@@ -50,4 +52,4 @@ DEPENDENCIES
   unicorn
 
 BUNDLED WITH
-   1.13.7
+   1.16.0
