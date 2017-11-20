@@ -22,6 +22,7 @@ class User < DBModel
     if self.security_stamp.blank?
       self.security_stamp = SecureRandom.uuid
     end
+    true
   end
 
   def ciphers
