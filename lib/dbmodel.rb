@@ -16,7 +16,7 @@
 
 class DBModel
   class << self
-    attr_reader :table_name, :columns, :primary_key
+    attr_reader :table_name, :columns
 
     def method_missing(method, *args, &block)
       if m = method.to_s.match(/^find_by_(.+)/)
@@ -47,7 +47,7 @@ class DBModel
     end
 
     def fetch_columns
-      return if @columns
+      return if defined?(@columns)
 
       @columns = {}
 
@@ -66,7 +66,7 @@ class DBModel
         }
       end
 
-      attr_accessor *(columns.keys)
+      attr_accessor(*(columns.keys))
     end
 
     def find_all_by_column(columns, values, limit = nil)
@@ -111,7 +111,7 @@ class DBModel
 
     def set_table_attrs(attrs)
       @table_attrs = attrs
-      attr_accessor *attrs
+      attr_accessor(*attrs)
     end
 
     def set_table_name(table)

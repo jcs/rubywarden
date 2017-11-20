@@ -20,7 +20,7 @@ describe "bitwarden encryption stuff" do
       Bitwarden.makeKey("this is a password", "nobody@example.com")
     )
 
-    cs.must_match /^0\.[^|]+|[^|]+$/
+    cs.must_match(/^0\.[^|]+|[^|]+$/)
   end
 
   it "should hash a password" do
@@ -48,12 +48,12 @@ describe "bitwarden encryption stuff" do
   it "should encrypt and decrypt properly" do
     ik = Bitwarden.makeKey("password", "user@example.com")
     k = Bitwarden.makeEncKey(ik)
-    j = Bitwarden.encrypt("hi there", ik[0, 32], ik[32, 32])
+    j = Bitwarden.encrypt("hi there", k[0, 32], k[32, 32])
 
     cs = Bitwarden::CipherString.parse(j)
 
     ik = Bitwarden.makeKey("password", "user@example.com")
-    Bitwarden.decrypt(cs.to_s, ik[0, 32], ik[32, 32]).must_equal "hi there"
+    Bitwarden.decrypt(cs.to_s, k[0, 32], k[32, 32]).must_equal "hi there"
   end
 
   it "should test mac equality" do

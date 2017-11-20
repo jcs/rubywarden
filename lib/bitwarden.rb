@@ -171,7 +171,7 @@ class Bitwarden
 
       # load or create RSA pair used for JWT signing
       def load_keys
-        if File.exists?(KEY)
+        if File.exist?(KEY)
           @rsa = OpenSSL::PKey::RSA.new File.read(KEY)
         else
           @rsa = OpenSSL::PKey::RSA.generate 2048

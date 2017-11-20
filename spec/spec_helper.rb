@@ -4,7 +4,7 @@ require "minitest/autorun"
 require "rack/test"
 
 # clear out test db
-if File.exists?(f = File.dirname(__FILE__) + "/../db/test.sqlite3")
+if File.exist?(f = File.dirname(__FILE__) + "/../db/test.sqlite3")
   File.unlink(f)
 end
 
