@@ -82,6 +82,26 @@ convert and import as many items as it can.
 This tool operates on the SQLite database directly (not through its REST API)
 so you can run it offline.
 
+### 2-Factor Authentication
+
+The Bitwarden browser extensions and mobile apps support accounts that require
+2FA, by prompting you for the current code after successfully logging in.
+To activate Time-based One-Time Passwords (TOTP) on your account after you've
+signed up in the previous steps, run the `tools/activate_totp.rb` program on
+the server:
+
+	env RACK_ENV=production bundle exec ruby tools/activate_totp.rb -u you@example.com
+
+You'll be shown a `data:` URL that has a PNG-encoded QR code, which you must
+copy and paste into a browser, then scan with your mobile TOTP authenticator
+apps (assuming it supports scanning from the camera).
+Once scanned, the activation program will ask you to enter the current TOTP
+being shown in the app for verification, and then save the TOTP secret to your
+account in the SQLite database.
+Your `security_stamp` will be reset, forcing a new login on any devices that
+are logged into your account.
+Those devices will now prompt for a TOTP code upon future logins.
+
 ### License
 
 Copyright (c) 2017 joshua stein `<jcs@jcs.org>`
