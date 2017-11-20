@@ -19,7 +19,7 @@ require "pbkdf2"
 require "openssl"
 
 class Bitwarden
-  class InvalidCipherString < Exception; end
+  class InvalidCipherString < RuntimeError; end
 
   # convenience methods for hashing/encryption/decryption that the apps do,
   # just so we can test against
