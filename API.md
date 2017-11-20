@@ -19,11 +19,35 @@ code.
 
 ### Password hashing and encryption key derivation
 
+Overview:
+
+- PBKDF2 with 5000 rounds stretches the user's master password with a salt
+  of the user's e-mail address to become the master key (unknown to the
+  server).
+- 64 random bytes are generated to become the symmetric key, the first half
+  of which becomes the encryption key and the second half becomes the MAC key.
+- The master key and a random 16-byte IV are used to encrypt the symmetric
+  key with AES-256-CBC.
+  The output+IV become the "protected symmetric key" attached to the user's
+  account, stored on the server and sent to the Bitwarden apps upon syncing.
+- Private values for each string stored with an item (called "Cipher" objects)
+  are encrypted with the user's symmetric key, which can only be known by
+  decrypting the user's protected symmetric key with their master key.
+  This encryption and decryption must be done entirely on the client side
+  since the user's master password/key is never known to the server.
+
+Changing the user's password or e-mail address will create a new master key,
+which is then used to re-encrypt the existing symmetric key, creating a new
+protected symmetric key while still being able to decrypt all existing Cipher
+object strings.
+
+#### Example
+
 User enters a `$masterPassword` of `p4ssw0rd` and an `$email` of
 `nobody@example.com`.
 
 PBKDF2 is used with a password of `$masterPassword`, salt of lowercased
-`$email`, and 5000 iterations to stretch password into `$internalKey`.
+`$email`, and 5000 iterations to stretch password into `$masterKey`.
 
 	def makeKey(password, salt)
 	  PBKDF2.new(:password => password, :salt => salt,
@@ -31,18 +55,19 @@ PBKDF2 is used with a password of `$masterPassword`, salt of lowercased
 	    :key_length => (256 / 8)).bin_string
 	end
 
-	irb> $internalKey = makeKey("p4ssw0rd", "nobody@example.com".downcase)
+	irb> $masterKey = makeKey("p4ssw0rd", "nobody@example.com".downcase)
 	=> "\x13\x88j`\x99m\xE3FA\x94\xEE'\xF0\xB2\x1A!\xB6>\\)\xF4\xD5\xCA#\xE5\e\xA6f5o{\xAA"
 
-An IV `$iv` is created with 16 random bytes and `$internalKey` is used as the
-key to encrypt 64 random bytes.
-The first 32 bytes of the result become `$encKey` and the last 32 bytes become
-`$macKey`.
+A random, 64-byte key `$symmetricKey` is created to become the symmetric key.
+The first 32 bytes become `$encKey` and the last 32 bytes become `$macKey`.
+A random, 16-byte IV `$iv` is created and `$masterKey` is used as the key to
+encrypt `$symmetricKey`.
 
 A "CipherString" (a Bitwarden internal format) is created by joining the
 [encryption type](https://github.com/bitwarden/browser/blob/f1262147a33f302b5e569f13f56739f05bbec362/src/services/constantsService.js#L13-L21)
 (`0` for `AesCbc256_B64`), a dot, the Base64-encoded IV, and the Base64-encoded
-`$encKey` and `$macKey`, with the pipe (`|`) character to become `$key`.
+`$encKey` and `$macKey`, with the pipe (`|`) character to become
+`$protectedKey`.
 
 	def cipherString(enctype, iv, ct, mac)
 	  [ enctype.to_s + "." + iv, ct, mac ].reject{|p| !p }.join("|")
@@ -50,6 +75,8 @@ A "CipherString" (a Bitwarden internal format) is created by joining the
 
 	# encrypt random bytes with a key to make new encryption key
 	def makeEncKey(key)
+	  # pt[0, 32] becomes the cipher encryption key
+	  # pt[32, 32] becomes the mac key
 	  pt = OpenSSL::Random.random_bytes(64)
 	  iv = OpenSSL::Random.random_bytes(16)
 
@@ -63,7 +90,7 @@ A "CipherString" (a Bitwarden internal format) is created by joining the
 	  return cipherString(0, Base64.strict_encode64(iv), Base64.strict_encode64(ct), nil)
 	end
 
-	irb> $key = makeEncKey($internalKey)
+	irb> $protectedKey = makeEncKey($masterKey)
 	=> "0.uRcMe+Mc2nmOet4yWx9BwA==|PGQhpYUlTUq/vBEDj1KOHVMlTIH1eecMl0j80+Zu0VRVfFa7X/MWKdVM6OM/NfSZicFEwaLWqpyBlOrBXhR+trkX/dPRnfwJD2B93hnLNGQ="
 
 This is now the main key associated with the user and sent to the server upon
@@ -73,7 +100,7 @@ An additional hash of the stretched password becomes `$masterPasswordHash`
 and is also sent to the server upon account creation and login, to actually
 verify the user account.
 This hash is created with 1 round of PBKDF2 over a password of
-`$internalKey` (which itself was created by 5000 rounds of (`$masterPassword`,
+`$masterKey` (which itself was created by 5000 rounds of (`$masterPassword`,
 `$email`)) and salt of `$masterPassword`.
 
 	# base64-encode a wrapped, stretched password+salt for signup/login
@@ -88,11 +115,11 @@ This hash is created with 1 round of PBKDF2 over a password of
 	=> "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo="
 
 Upon future logins with the user's plain-text `$masterPassword` and `$email`,
-`$internalKey` can be calculated from them and then `$masterPassword` should
+`$masterKey` can be calculated from them and then `$masterPassword` should
 be cleared from memory.
-`$internalKey` becomes the key used to build the encryption and MAC keys used
-for individual encryption/decryption of items, and should never leave the
-device.
+`$protectedKey` returned from the server is then decrypted using `$masterKey`,
+revealing the `$encKey` and `$macKey` used for per-item encryption.
+`$masterPassword` and `$masterKey` should never leave the device.
 
 ### "Cipher" encryption and decryption
 

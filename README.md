@@ -18,23 +18,12 @@ HTTP server with TLS to support syncing across multiple devices.
 Backing up your data is as easy as copying the `db/production.sqlite3` file
 somewhere.
 
-All user data in the SQLite database is stored in an encrypted format the same
-way it is in the official Bitwarden backend:
-
-- PBKDF2 with 5000 rounds stretches your master password with a salt of your
-  e-mail address to become the secret key (unknown to the server).
-- This key and a random 16-byte IV are used to encrypt 64 random bytes with
-  AES-256-CBC.
-  The output+IV become the "known" key attached to your user account, stored
-  on the server and sent to the Bitwarden apps upon syncing.
-- Private values for each item (called "Cipher" objects) can only be encrypted
-  and decrypted on the client side by unencrypting the "known" key with the
-  secret key derived from your master password and e-mail address.
-  The first 32 bytes of the secret key are used as the encryption key, and the
-  last 32 bytes are used as the HMAC key.
-
-All items must be re-encrypted server-side if your master password or e-mail
-address change (not yet supported).
+All user data in the SQLite database is stored in an encrypted format the
+[same way](https://help.bitwarden.com/crypto.html)
+it is in the official Bitwarden backend, where the master password is never
+known by the server.
+For details on the format, consult the
+[documentation](https://github.com/jcs/bitwarden-ruby/blob/master/API.md).
 
 ### API Documentation
 
