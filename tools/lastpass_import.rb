@@ -37,6 +37,7 @@ end
 
 username = nil
 file = nil
+@folders = {} 
 
 begin
   GetoptLong.new(
@@ -77,17 +78,18 @@ end
 
 @master_key = Bitwarden.makeKey(password, @u.email)
 
+@u.folders.each do |folder|
+  folder_name = @u.decrypt_data_with_master_password_key(folder.name, @master_key)
+  @folders[folder_name] = folder.uuid
+end
+
 def encrypt(str)
   @u.encrypt_data_with_master_password_key(str, @master_key)
 end
 
-def get_or_create_folder(str)
-  @u.folders.each do |folder|
-    folder_name = @u.decrypt_data_with_master_password_key(folder.name, @master_key)
-    
-    if str == folder_name
-      return folder
-    end
+def get_or_create_folder_uuid(str)
+  if @folders.has_key? str
+    return @folders[str]
   end
 
   f = Folder.new
@@ -100,7 +102,8 @@ def get_or_create_folder(str)
     end
   end
  
-  return f
+  @folders[str] = f.uuid
+  return f.uuid
 end
 
 to_save = {}
@@ -121,8 +124,7 @@ CSV.foreach(file, headers: true) do |row|
   }
 
   if !row["grouping"].blank?
-    folder = get_or_create_folder(row["grouping"])
-    c.folder_uuid = folder.uuid
+    c.folder_uuid = get_or_create_folder_uuid(row["grouping"])
   end
 
   # http://sn means it's a secure note
