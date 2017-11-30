@@ -73,8 +73,12 @@ so you can run it offline.
 
 ### Lastpass Conversion
 
-Export everything from LastPass by going to your vault, "more options" and then "Export".
-It should will then export your details in a new window in CSV format, copy and paste this data into a csv file accessible from your bitwarden-ruby installation. Unfortunately due to limitations in LastPass export the "extra fields" and "attachments" data in the LastPass vault will not be converted.
+Export everything from LastPass by going to your vault, "More Options",
+"Advanced" and then "Export". It will then export your details in a new browser
+window in CSV format, copy and paste this data into a file accessible from your
+bitwarden-ruby installation. Unfortunately due to limitations in LastPass
+export the "extra fields" and "attachments" data in the LastPass vault will not
+be converted.
 
 Once you have created your initial user account through `bitwarden-ruby`, run
 the conversion tool with your account e-mail address:

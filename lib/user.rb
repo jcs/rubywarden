@@ -30,6 +30,14 @@ class User < DBModel
       each{|d| d.user = self }
   end
 
+  def decrypt_data_with_master_password_key(data, mk)
+    # self.key is random data encrypted with the key of (password,email), so
+    # create that key and decrypt the random data to get the original
+    # encryption key, then use that key to decrypt the data
+    encKey = Bitwarden.decrypt(self.key, mk[0, 32], mk[32, 32])
+    Bitwarden.decrypt(data, encKey[0, 32], encKey[32, 32])
+  end
+
   def devices
     @devices ||= Device.find_all_by_user_uuid(self.uuid).
       each{|d| d.user = self }
@@ -41,14 +49,6 @@ class User < DBModel
     # encryption key, then use that key to encrypt the data
     encKey = Bitwarden.decrypt(self.key, mk[0, 32], mk[32, 32])
     Bitwarden.encrypt(data, encKey[0, 32], encKey[32, 32])
-  end
-
-  def decrypt_data_with_master_password_key(data, mk)
-    # self.key is random data encrypted with the key of (password,email), so
-    # create that key and decrypt the random data to get the original
-    # encryption key, then use that key to decrypt the data
-    encKey = Bitwarden.decrypt(self.key, mk[0, 32], mk[32, 32])
-    Bitwarden.decrypt(data, encKey[0, 32], encKey[32, 32])
   end
 
   def folders
