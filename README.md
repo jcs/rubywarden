@@ -71,6 +71,28 @@ convert and import as many items as it can.
 This tool operates on the SQLite database directly (not through its REST API)
 so you can run it offline.
 
+### Lastpass Conversion
+
+Export everything from LastPass by going to your vault, "More Options",
+"Advanced" and then "Export". It will then export your details in a new browser
+window in CSV format, copy and paste this data into a file accessible from your
+bitwarden-ruby installation. Unfortunately due to limitations in LastPass
+export the "extra fields" and "attachments" data in the LastPass vault will not
+be converted.
+
+Once you have created your initial user account through `bitwarden-ruby`, run
+the conversion tool with your account e-mail address:
+
+```
+env RACK_ENV=production bundle exec ruby tools/lastpass_import.rb -f /path/to/data.csv -u you@example.com
+```
+
+It will prompt you for the master password you already created, and then
+convert and import as many items as it can.
+
+This tool operates on the SQLite database directly (not through its REST API)
+so you can run it offline.
+
 ### 2-Factor Authentication
 
 The Bitwarden browser extensions and mobile apps support accounts that require
