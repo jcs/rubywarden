@@ -76,7 +76,12 @@ end
 @master_key = Bitwarden.makeKey(password, @u.email)
 
 def encrypt(str)
-  @u.encrypt_data_with_master_password_key(str, @master_key)
+	if str.nil?
+		print "Tried to encrypt nil string, skipping\n"
+	else
+		@u.encrypt_data_with_master_password_key(str, @master_key)
+	end
+
 end
 
 to_save = {}
@@ -144,10 +149,15 @@ File.read(file).split("\n").each do |line|
 
   when "identities.Identity",
   "system.folder.Regular",
-  "wallet.computer.License"
+	"wallet.computer.License",
+	"wallet.government.SsnUS",
+	"wallet.financial.BankAccountUS",
+	"wallet.government.DriversLicense",
+	"wallet.computer.UnixServer",
+	"wallet.computer.Database"
     puts "skipping #{i["typeName"]} #{i["title"]}"
     skipped += 1
-    next
+		next
 
   else
     raise "unimplemented: #{i["typeName"].inspect}"
