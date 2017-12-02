@@ -19,7 +19,9 @@
 #
 
 def device_from_bearer
-  if m = request.env["HTTP_AUTHORIZATION"].to_s.match(/^Bearer (.+)/)
+  if m = (request.env["HTTP_AUTHORIZATION"].to_s.match(/^Bearer (.+)/) 
+    # Needed for the web vaul which use the content language header to store the bearer
+    || request.env["HTTP_CONTENT_LANGUAGE"].to_s.match(/^Bearer (.+)/))
     token = m[1]
     if (d = Device.find_by_access_token(token))
       if d.token_expires_at >= Time.now
@@ -59,6 +61,9 @@ before do
     if !js.strip.blank?
       params.merge!(JSON.parse(js))
     end
+  ## needed for the web vault, which doesn't use the content-type  
+  elsif request.accept.to_s.match(/application\/json/)
+    js = request.body.read.to_s
   end
 
   # some bitwarden apps send params with uppercased first letter, some all
@@ -94,9 +99,9 @@ namespace IDENTITY_BASE_URL do
       need_params(
         :client_id,
         :grant_type,
-        :deviceidentifier,
-        :devicename,
-        :devicetype,
+        #:deviceidentifier,
+        #:devicename,
+        #:devicetype,
         :password,
         :scope,
         :username,
@@ -128,13 +133,14 @@ namespace IDENTITY_BASE_URL do
         }.to_json ]
       end
 
-      d = Device.find_by_uuid(params[:deviceidentifier])
-      if d && d.user_uuid != u.uuid
-        # wat
-        d.destroy
-        d = nil
+      if params[:deviceidentifier]
+        d = Device.find_by_uuid(params[:deviceidentifier])
+        if d && d.user_uuid != u.uuid
+          # wat
+          d.destroy
+          d = nil
+        end
       end
-
       if !d
         d = Device.new
         d.user_uuid = u.uuid
@@ -157,14 +163,20 @@ namespace IDENTITY_BASE_URL do
         return validation_error("Unknown error")
       end
 
+      status 200
+      headers \
+      "access-control-allow-origin" => "*"
+
       {
         :access_token => d.access_token,
         :expires_in => (d.token_expires_at - Time.now).floor,
         :token_type => "Bearer",
         :refresh_token => d.refresh_token,
         :Key => d.user.key,
+	:PrivateKey => d.user.private_key,
         # TODO: when to include :privateKey and :TwoFactorToken?
       }.to_json
+
     end
   end
 end
@@ -208,6 +220,8 @@ namespace BASE_URL do
       u.password_hash = params[:masterpasswordhash]
       u.password_hint = params[:masterpasswordhint]
       u.key = params[:key]
+      u.public_key = params[:keys][:publicKey]
+      u.private_key = params[:keys][:encryptedPrivateKey]
 
       # is this supposed to come from somewhere?
       u.culture = "en-US"
@@ -218,7 +232,14 @@ namespace BASE_URL do
       if !u.save
         return validation_error("User save failed")
       end
-
+      status 200
+      headers \
+      "access-control-allow-origin" => "*"
+      #"cf-ray" => "3c60a9112aaf69d7-LHR",
+      #"status" => "200",
+      #"set-cookie" => "__cfduid=d308707a519cf850ff2d5a545bc0c5b6a1512074831; expires=Fri, 30-Nov-18 20:47:11 GMT; path=/; domain=.arfain.fr; HttpOnly",
+      #"Refresh" => "Refresh: 20; http://www.ietf.org/rfc/rfc2324.txt"
+      #body "I'm a tea pot!"
       ""
     end
   end
@@ -243,12 +264,70 @@ namespace BASE_URL do
     }.to_json
   end
 
+  # Used by the web vault to update the private and public keys if the users doesn't have ones.
+  post "/accounts/keys" do
+    content_type :json
+    # Needed by the web vault for EVERY response
+	  response['access-control-allow-origin'] = '*'
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+	d.user.private_key = params[:encryptedPrivateKey]
+	d.user.public_key = params[:publicKey]
+
+    {
+	  "Id" => d.user_uuid,
+	  "Name" => d.user.name,
+	  "Email" => d.user.email,
+	  "EmailVerified" => d.user.email_verified,
+	  "Premium" => d.user.premium,
+	  "MasterPasswordHint" => d.user.password_hint,
+	  "Culture" => d.user.culture,
+	  "TwoFactorEnabled" => d.user.totp_secret,
+	  "Key" => d.user.key,
+	  "PrivateKey" => d.user.private_key,
+	  "SecurityStamp" => d.user.security_stamp,
+	  "Organizations" => "[]",
+	  "Object" => "profile",
+	}.to_json
+	
+
+  end
+  
+  # Used by the web vaul to connect and load the user profile/datas
+  get "/accounts/profile" do
+    content_type :json
+	response['access-control-allow-origin'] = '*'
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+
+    {
+	  "Id" => d.user_uuid,
+	  "Name" => d.user.name,
+	  "Email" => d.user.email,
+	  "EmailVerified" => d.user.email_verified,
+	  "Premium" => d.user.premium,
+	  "MasterPasswordHint" => d.user.password_hint,
+	  "Culture" => d.user.culture,
+	  "TwoFactorEnabled" => d.user.totp_secret,
+	  "Key" => d.user.key,
+	  "PrivateKey" => d.user.private_key,
+	  "SecurityStamp" => d.user.security_stamp,
+	  "Organizations" => "[]",
+	  "Object" => "profile",
+	}.to_json
+  end
+
   #
   # ciphers
   #
 
   # create a new cipher
   post "/ciphers" do
+	response['access-control-allow-origin'] = '*'
     d = device_from_bearer
     if !d
       return validation_error("invalid bearer")
@@ -272,6 +351,50 @@ namespace BASE_URL do
 
     c = Cipher.new
     c.user_uuid = d.user_uuid
+    c.update_from_params(params)
+
+    Cipher.transaction do
+      if !c.save
+        return validation_error("error saving")
+      end
+
+      c.to_hash.merge({
+        "Edit" => true,
+      }).to_json
+    end
+  end
+
+
+  # update a cipher via web vault
+  post "/ciphers/:uuid" do
+	response['access-control-allow-origin'] = '*'
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+
+    c = nil
+    if params[:uuid].blank? ||
+    !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
+      return validation_error("invalid cipher")
+    end
+
+    need_params(:type, :name) do |p|
+      return validation_error("#{p} cannot be blank")
+    end
+
+    begin
+      Bitwarden::CipherString.parse(params[:name])
+    rescue Bitwarden::InvalidCipherString
+      return validation_error("Invalid name")
+    end
+
+    if !params[:folderid].blank?
+      if !Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:folderid])
+        return validation_error("Invalid folder")
+      end
+    end
+
     c.update_from_params(params)
 
     Cipher.transaction do
@@ -348,6 +471,51 @@ namespace BASE_URL do
   #
   # folders
   #
+
+  # retrieve folder
+  get "/folders" do
+    content_type :json
+	response['access-control-allow-origin'] = '*'
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+	{
+	  "Data" => d.user.folders.map{|f| f.to_hash},
+	  "Object" => "list",
+	}.to_json
+
+  end
+  get "/collections" do
+	response['access-control-allow-origin'] = '*'
+	{"Data":[],"Object":"list"}.to_json
+  end
+
+  get "/ciphers" do
+    content_type :json
+	response['access-control-allow-origin'] = '*'
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+	{
+	  "Data" => d.user.ciphers.map{|f| f.to_hash},
+	  "Object" => "list",
+	}.to_json
+  end
+
+  get "/ciphers/:uuid" do
+    content_type :json
+	response['access-control-allow-origin'] = '*'
+	c = nil
+
+    if !(c = Cipher.find_by_uuid(params[:uuid]))
+	  return validation_error("invalid cipher")
+	end
+	c.to_hash.merge({
+        "Edit" => true,
+	}).to_json
+  end
 
   # create a new folder
   post "/folders" do
@@ -475,7 +643,6 @@ end
 namespace ICONS_URL do
   get "/:domain/icon.png" do
     # TODO: do this service ourselves
-
     redirect "http://#{params[:domain]}/favicon.ico"
   end
 end
