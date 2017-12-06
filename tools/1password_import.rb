@@ -144,6 +144,7 @@ File.read(file).split("\n").each do |line|
 
   when "identities.Identity",
   "system.folder.Regular",
+  "system.folder.SavedSearch",
   "wallet.computer.License"
     puts "skipping #{i["typeName"]} #{i["title"]}"
     skipped += 1
