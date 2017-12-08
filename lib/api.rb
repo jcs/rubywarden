@@ -19,9 +19,7 @@
 #
 
 def device_from_bearer
-  if m = (request.env["HTTP_AUTHORIZATION"].to_s.match(/^Bearer (.+)/) 
-    # Needed for the web vaul which use the content language header to store the bearer
-    || request.env["HTTP_CONTENT_LANGUAGE"].to_s.match(/^Bearer (.+)/))
+  if m = (request.env["HTTP_AUTHORIZATION"].to_s.match(/^Bearer (.+)/) || request.env["HTTP_CONTENT_LANGUAGE"].to_s.match(/^Bearer (.+)/))
     token = m[1]
     if (d = Device.find_by_access_token(token))
       if d.token_expires_at >= Time.now
@@ -64,6 +62,11 @@ before do
   ## needed for the web vault, which doesn't use the content-type  
   elsif request.accept.to_s.match(/application\/json/)
     js = request.body.read.to_s
+    if !request.content_type.to_s.match(/application\/x-www-form-urlencoded/)
+      if !js.strip.blank?
+        params.merge!(JSON.parse(js))
+      end
+    end
   end
 
   # some bitwarden apps send params with uppercased first letter, some all
