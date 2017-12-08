@@ -238,11 +238,6 @@ namespace BASE_URL do
       status 200
       headers \
       "access-control-allow-origin" => "*"
-      #"cf-ray" => "3c60a9112aaf69d7-LHR",
-      #"status" => "200",
-      #"set-cookie" => "__cfduid=d308707a519cf850ff2d5a545bc0c5b6a1512074831; expires=Fri, 30-Nov-18 20:47:11 GMT; path=/; domain=.arfain.fr; HttpOnly",
-      #"Refresh" => "Refresh: 20; http://www.ietf.org/rfc/rfc2324.txt"
-      #body "I'm a tea pot!"
       ""
     end
   end
