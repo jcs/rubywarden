@@ -19,9 +19,7 @@
 #
 
 def device_from_bearer
-  if m = (request.env["HTTP_AUTHORIZATION"].to_s.match(/^Bearer (.+)/) 
-    # Needed for the web vaul which use the content language header to store the bearer
-    || request.env["HTTP_CONTENT_LANGUAGE"].to_s.match(/^Bearer (.+)/))
+  if m = (request.env["HTTP_AUTHORIZATION"].to_s.match(/^Bearer (.+)/) || request.env["HTTP_CONTENT_LANGUAGE"].to_s.match(/^Bearer (.+)/))
     token = m[1]
     if (d = Device.find_by_access_token(token))
       if d.token_expires_at >= Time.now
