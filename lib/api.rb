@@ -118,11 +118,11 @@ namespace IDENTITY_BASE_URL do
 
       u = User.find_by_email(params[:username])
       if !u
-        return validation_error("Invalid username")
+        return validation_error("Invalid username or password")
       end
 
       if !u.has_password_hash?(params[:password])
-        return validation_error("Invalid password")
+        return validation_error("Invalid password or password")
       end
 
       if u.two_factor_enabled? &&
@@ -319,9 +319,68 @@ namespace BASE_URL do
 	}.to_json
   end
 
+  # Used to update masterpassword
+  post "/accounts/password" do
+	content_type :json
+	response['access-control-allow-origin'] = '*'
+    d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+	
+	need_params(:key, :masterpasswordhash, :newmasterpasswordhash) do |p|
+	  return validation_error("#{p} cannot be blank")
+	end
+
+	if !params[:key].to_s.match(/^0\..+\|.+/)
+	  return validation_error("Invalid key")
+	end
+	
+	begin
+	  Bitwarden::CipherString.parse(params[:key])
+	rescue Bitwarden::InvalidCipherString
+	  return validation_error("Invalid key")
+	end
+	
+	if d.user.password_hash == params[:masterpasswordhash]
+      d.user.key=params[:key]
+	  d.user.password_hash=params[:newmasterpasswordhash]
+	else
+	  return validation_error("Wrong current password")
+	end
+	  
+    User.transaction do
+	  if !d.user.save
+	    return validation_error("Unknown error")
+	  end
+	end
+	""
+  end
+
+  # Used to update email 
+  post "/accounts/email-token" do
+	content_type :json
+	response['access-control-allow-origin'] = '*'
+	validation_error("Not implemented yet")
+  end
+
   #
   # ciphers
   #
+
+  # Import from keepass or others via web vault
+  post "/ciphers/import" do
+    content_type :json
+	response['access-control-allow-origin'] = '*'
+
+	d = device_from_bearer
+    if !d
+      return validation_error("invalid bearer")
+    end
+
+	return validation_error("import tool not implemented yet")
+
+  end
 
   # create a new cipher
   post "/ciphers" do
@@ -635,6 +694,17 @@ namespace BASE_URL do
 
       ""
     end
+  end
+
+  ### Organizations
+
+  post "/organizations" do
+    d= device_from_bearer
+	if !d
+	 return validation_error("invalid bearer")
+	end
+
+	return validation_error("Organizations not implemented yet")
   end
 end
 
