@@ -247,7 +247,7 @@ namespace BASE_URL do
     if !params[:keys][:encryptedPrivateKey].to_s.match(/^2\..+\|.+/)
       return validation_error("Invalid key")
     end
-    puts "BIS"
+
     begin
       Bitwarden::CipherString.parse(params[:key])
     rescue Bitwarden::InvalidCipherString
@@ -266,8 +266,8 @@ namespace BASE_URL do
       u.password_hash = params[:masterpasswordhash]
       u.password_hint = params[:masterpasswordhint]
       u.key = params[:key]
-      puts u.public_key = params[:keys][:publicKey]
-      puts u.private_key = params[:keys][:encryptedPrivateKey]
+      u.public_key = params[:keys][:publicKey]
+      u.private_key = params[:keys][:encryptedPrivateKey]
 
       # is this supposed to come from somewhere?
       u.culture = "en-US"
@@ -315,7 +315,6 @@ namespace BASE_URL do
     end
     
     if !params[:encryptedprivatekey].to_s.match(/^2\..+\|.+/)
-	  puts params[:encryptedprivatekey]	
       return validation_error("Invalid key")
     end
     
