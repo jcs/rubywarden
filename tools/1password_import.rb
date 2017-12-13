@@ -89,11 +89,11 @@ def save_field(cdata, field)
 
   field['t'] = 'unnamed field' if field['t'].blank?
 
-  case field['type']
-  when 'T'
+  case field['designation']
+  when 'username'
     cdata["Username"] = encrypt(field['value'])
     return
-  when 'P'
+  when 'password'
     @current_password = field['value']
     cdata['Password'] = encrypt(field['value'])
     return
