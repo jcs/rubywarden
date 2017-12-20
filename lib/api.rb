@@ -158,7 +158,7 @@ namespace IDENTITY_BASE_URL do
       end
 
       if !u.has_password_hash?(params[:password])
-        return validation_error("Invalid password or password")
+        return validation_error("Invalid username or password")
       end
 
       if u.two_factor_enabled? &&
