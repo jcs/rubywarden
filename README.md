@@ -93,6 +93,27 @@ convert and import as many items as it can.
 This tool operates on the SQLite database directly (not through its REST API)
 so you can run it offline.
 
+### bitwarden Conversion
+
+Export your bitwarden vault via the web interface or the browser plugin, which
+should prompt you to save a `bitwarden_export_<datestamp>.csv` file. Due to
+limitations of the exporter, neither cards nor identities will be exported,
+and any custom fields will lose their type (text, hidden, or boolean) and be
+simply exported as text.
+
+Once you have created your initial user account through `bitwarden-ruby`, run
+the conversion tool with your account e-mail address:
+
+```
+env RACK_ENV=production bundle exec ruby tools/bitwarden_import.rb -f /path/to/data.csv -u you@example.com
+```
+
+It will prompt you for the master password you already created, and then
+convert and import as many items as it can.
+
+This tool operates on the SQLite database directly (not through its REST API)
+so you can run it offline.
+
 ### 2-Factor Authentication
 
 The Bitwarden browser extensions and mobile apps support accounts that require
