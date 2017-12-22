@@ -14,6 +14,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
+require "rotp"
+
 class User < DBModel
   set_table_name "users"
   set_primary_key "uuid"
