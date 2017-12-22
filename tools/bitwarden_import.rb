@@ -137,7 +137,7 @@ CSV.foreach(file, headers: true) do |row|
       )
     end
   end
-  cdata['Uri'] = encrypt(row['login_url']) if row['login_url'].present?
+  cdata['Uri'] = encrypt(row['login_uri']) if row['login_uri'].present?
   cdata['Username'] = encrypt(row['login_username']) if row['login_username'].present?
   cdata['Password'] = encrypt(row['login_password']) if row['login_password'].present?
   cdata['Totp'] = encrypt(row['login_totp']) if row['login_totp'].present?
