@@ -318,7 +318,7 @@ namespace BASE_URL do
       return validation_error("Invalid key")
     end
     
-	d.user.private_key = params[:encryptedprivatekey]
+    d.user.private_key = params[:encryptedprivatekey]
     d.user.public_key = params[:publickey]
 
     {
@@ -513,7 +513,7 @@ namespace BASE_URL do
   
   get "/collections" do
 	  response['access-control-allow-origin'] = '*'
-	  {"Data":[],"Object":"list"}.to_json
+	  {"Data" => [],"Object" => "list"}.to_json
   end
 
   get "/ciphers" do
