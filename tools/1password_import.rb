@@ -27,6 +27,7 @@
 
 require File.realpath(File.dirname(__FILE__) + "/../lib/bitwarden_ruby.rb")
 require "getoptlong"
+require 'uri'
 
 def usage
   puts "usage: #{$0} -f data.1pif -u user@example.com"
@@ -82,6 +83,45 @@ end
 to_save = {}
 skipped = 0
 
+def save_field(cdata, field)
+  field['v'] = field['v'].to_s if field['v']
+  return if field['value'].blank? && field['v'].blank?
+
+  field['t'] = 'unnamed field' if field['t'].blank?
+
+  case field['designation']
+  when 'username'
+    cdata["Username"] = encrypt(field['value'])
+    return
+  when 'password'
+    @current_password = field['value']
+    cdata['Password'] = encrypt(field['value'])
+    return
+  end
+
+  case field['k']
+  when 'string'
+    cdata['Fields'].push("Type" => 0,
+                         "Name" => encrypt(field['t']),
+                         "Value" => encrypt(field['v']))
+  when 'concealed'
+    if field['n'] =~ /^TOTP/
+      totp_secret = if field['v'] =~ %r{^otpauth://}
+                      URI.decode_www_form(URI.parse(field['v']).query).assoc('secret').last
+                    else
+                      field['v']
+                    end
+
+      cdata['Totp'] = encrypt(totp_secret)
+    else # some other password
+      return if field['v'] == @current_password
+      cdata['Fields'].push("Type" => 1,
+                           "Name" => encrypt(field['t']),
+                           "Value" => encrypt(field['v']))
+    end
+  end
+end
+
 File.read(file).split("\n").each do |line|
   next if line[0] != "{"
   i = JSON.parse(line)
@@ -113,6 +153,7 @@ File.read(file).split("\n").each do |line|
     cdata["SecureNote"] = { "Type" => 0 }
 
   when "wallet.computer.Router"
+    next if i["secureContents"]["wireless_password"].nil?
     cdata["Password"] = encrypt(i["secureContents"]["wireless_password"])
 
   when "wallet.financial.CreditCard"
@@ -145,10 +186,12 @@ File.read(file).split("\n").each do |line|
   when "identities.Identity",
   "system.folder.Regular",
   "system.folder.SavedSearch",
-  "wallet.computer.License"
+  "wallet.computer.License",
+  "wallet.computer.UnixServer"
     puts "skipping #{i["typeName"]} #{i["title"]}"
     skipped += 1
     next
+
 
   else
     raise "unimplemented: #{i["typeName"].inspect}"
@@ -157,48 +200,22 @@ File.read(file).split("\n").each do |line|
   puts "converting #{Cipher.type_s(c.type)} #{i["title"]}... "
 
   if i["secureContents"]
+    @current_password = nil
     if i["secureContents"]["notesPlain"].present?
       cdata["Notes"] = encrypt(i["secureContents"]["notesPlain"])
     end
 
     if i["secureContents"]["password"].present?
-      cdata["Password"] = encrypt(i["secureContents"]["password"])
+      @current_password = cdata["Password"] = encrypt(i["secureContents"]["password"])
     end
 
-    if i["secureContents"]["fields"]
-      cdata["Fields"] = []
+    cdata["Fields"] = []
+    (i["secureContents"]["fields"] || []).each do |field|
+      save_field(cdata, field)
+    end
 
-      i["secureContents"]["fields"].each do |field|
-        case field["designation"]
-        when "username"
-          if c.type == Cipher::TYPE_LOGIN && cdata["Username"].blank? &&
-          field["value"].present?
-            cdata["Username"] = encrypt(field["value"])
-          end
-
-        when "password"
-          if c.type == Cipher::TYPE_LOGIN && cdata["Password"].blank? &&
-          field["value"].present?
-            cdata["Password"] = encrypt(field["value"])
-          end
-
-        else
-          if field["name"].present? && field["name"].match(/password/i)
-            # ignore this field, as it's probably a duplicate of the password
-            # field and will cause the apps to show it in plaintext rather than
-            # as a masked password field
-            next
-          end
-
-          if field["name"].present? && field["value"].present?
-            cdata["Fields"].push({
-              "Type" => 0, # text
-              "Name" => encrypt(field["name"]),
-              "Value" => encrypt(field["value"]),
-            })
-          end
-        end
-      end
+    (i['secureContents']['sections'] || []).map { |x| x['fields'] }.compact.flatten.each do |field|
+      save_field(cdata, field)
     end
   end
 
@@ -226,7 +243,7 @@ end
 
 imp = 0
 Cipher.transaction do
-  to_save.each do |k,v|
+  to_save.each do |_, v|
     v.each do |c|
       if !c.save
         raise "failed saving #{c.inspect}"
