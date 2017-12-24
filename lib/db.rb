@@ -93,27 +93,50 @@ class Db
         (version INTEGER)
       ")
 
-      v = @db.execute("SELECT version FROM schema_version").first
-      if !v
-        v = { "version" => 0 }
-      end
+      loop do
+        v = @db.execute("SELECT version FROM schema_version").first
+        if !v
+          v = { "version" => 0 }
+        end
 
-      case v["version"]
-      when 0
-        @db.execute("INSERT INTO schema_version (version) VALUES (1)")
+        case v["version"]
+        when 0
+          @db.execute("INSERT INTO schema_version (version) VALUES (1)")
 
-      when 1
-        @db.execute("
-          CREATE TABLE IF NOT EXISTS
-          folders
-          (uuid STRING PRIMARY KEY,
-          created_at DATETIME,
-          updated_at DATETIME,
-          user_uuid STRING,
-          name BLOB)
-        ")
+        when 1
+          @db.execute("
+            CREATE TABLE IF NOT EXISTS
+            folders
+            (uuid STRING PRIMARY KEY,
+            created_at DATETIME,
+            updated_at DATETIME,
+            user_uuid STRING,
+            name BLOB)
+          ")
 
-        @db.execute("UPDATE schema_version SET version = 2")
+          @db.execute("UPDATE schema_version SET version = 2")
+
+        when 2
+          @db.execute("
+            CREATE TABLE IF NOT EXISTS
+            equiv_domains
+            (uuid STRING PRIMARY KEY,
+            user_uuid STRING)
+          ")
+
+          @db.execute("
+            CREATE TABLE IF NOT EXISTS
+            equiv_domain_names
+            (uuid STRING PRIMARY KEY,
+            domain STRING,
+            domain_uuid STRING)
+          ")
+
+          @db.execute("UPDATE schema_version SET version = 3")
+
+        when 3
+          break
+        end
       end
 
       # eagerly cache column definitions
