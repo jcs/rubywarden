@@ -14,6 +14,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
+require 'net/smtp'
+
 #
 # helper methods
 #
@@ -221,6 +223,57 @@ namespace BASE_URL do
 
       ""
     end
+  end
+
+  # send a password hint to a registered user
+  post "/accounts/password-hint" do
+    if !settings.smtp or !settings.smtp_from
+      return validation_error("SMTP server not configured properly")
+    end
+
+    unless params[:email].to_s.match?(/^.+@.+\..+$/)
+      return validation_error("Invalid e-mail address")
+    end
+
+    u = User.find_by_email(params["email"])
+    if u
+      Thread.new do
+        begin
+          smtp = Net::SMTP.new(settings.smtp[:address], settings.smtp[:port])
+          if settings.smtp[:tls]
+            smtp.enable_tls
+          elsif settings.smtp[:starttls]
+            smtp.enable_starttls
+          end
+          smtp.start(settings.smtp.fetch(:helo, 'localhost'),
+                     settings.smtp[:user],
+                     settings.smtp[:secret],
+                     settings.smtp[:authtype]) do |server|
+            hint = if u.password_hint
+                     "It is: #{u.password_hint}"
+                   else
+                     "Unfortunately, you didn't set a password hint."
+                   end
+            message = <<~MESSAGE
+              From: #{settings.smtp_from}
+              To: #{u.email}
+              Subject: bitwarden master password hint
+
+              Someone (possibly you!) at the IP address #{request.ip} requested your
+              master password hint for #{request.host}.
+
+              #{hint}
+
+              If you didn't request your hint, you can safely ignore this email.
+            MESSAGE
+            smtp.send_message message, settings.smtp_from, u.email
+          end
+        rescue => e
+          logger.error e
+        end
+      end
+    end
+    {}.to_json
   end
 
   # fetch profile and ciphers

@@ -17,4 +17,16 @@
 require File.dirname(__FILE__) + "/lib/bitwarden_ruby.rb"
 require "#{APP_ROOT}/lib/api.rb"
 
+# Parameters to pass to Net::SMTP.start, for sending password hint emails.
+# if :tls is true, we'll attempt to set up a TLS connection to the server; if
+# :starttls is true, we'll try to use STARTTLS after the connection is
+# established.
+#
+# set smtp: {
+#   address: "localhost",
+#   port: 25
+# }
+#
+# set :smtp_from, "nobody@localhost"
+
 run Sinatra::Application
