@@ -162,7 +162,7 @@ File.read(file).split("\n").each do |line|
     if i["secureContents"]["cardholder"].present?
       cdata["CardholderName"] = encrypt(i["secureContents"]["cardholder"])
     end
-    if i["secureContents"]["cardholder"].present?
+    if i["secureContents"]["type"].present?
       cdata["Brand"] = encrypt(i["secureContents"]["type"])
     end
     if i["secureContents"]["ccnum"].present?
