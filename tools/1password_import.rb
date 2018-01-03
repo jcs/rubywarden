@@ -187,7 +187,14 @@ File.read(file).split("\n").each do |line|
   "system.folder.Regular",
   "system.folder.SavedSearch",
   "wallet.computer.License",
-  "wallet.computer.UnixServer"
+  "wallet.computer.UnixServer",
+  "wallet.computer.License",
+  "wallet.government.SsnUS",
+  "wallet.financial.BankAccountUS",
+  "wallet.government.DriversLicense",
+  "wallet.membership.Membership",
+  "wallet.onlineservices.Email.v2",
+  "wallet.computer.Database"
     puts "skipping #{i["typeName"]} #{i["title"]}"
     skipped += 1
     next
