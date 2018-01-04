@@ -15,6 +15,6 @@
 #
 
 require File.dirname(__FILE__) + "/lib/bitwarden_ruby.rb"
-require "#{APP_ROOT}/lib/api.rb"
+require "#{APP_ROOT}/lib/app.rb"
 
-run Sinatra::Application
+run BitwardenRuby::App
