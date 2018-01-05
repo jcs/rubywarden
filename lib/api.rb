@@ -124,6 +124,15 @@ namespace IDENTITY_BASE_URL do
   #  password: login with a username/password, register/update the device
   #  refresh_token: just generate a new access_token
   # respond with an access_token and refresh_token
+  
+  # For HTTP CORS verification
+  options "*" do
+    response.headers["Allow"] = "GET, POST, OPTIONS, PUT, DELETE"
+    response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    200
+  end
+  
   post "/connect/token" do
     d = nil
 
@@ -397,7 +406,7 @@ namespace BASE_URL do
      return validation_error("Invalid key")
    end
 
-   if d.user.password_hash == params[:masterpasswordhash]
+   if d.user.has_password_hash?(params[:masterpasswordhash])
       d.user.key=params[:key]
      d.user.password_hash=params[:newmasterpasswordhash]
    else
@@ -445,8 +454,7 @@ namespace BASE_URL do
     end
 
     # We create each CipherString
-    i = 0
-    params[:ciphers].each do |p|
+    params[:ciphers].each_with_index do |p,i|
       c = Cipher.new
       c.user_uuid = d.user_uuid
       c.update_from_params(p)
@@ -456,7 +464,6 @@ namespace BASE_URL do
           return validation_error("error saving")
         end
       end
-      i+=1
     end
     ""
   end
