@@ -188,6 +188,7 @@ module BitwardenRuby
               return validation_error("invalid cipher")
             end
 
+            FileUtils.rm_r attachment_path(id: "", uuid: c.uuid, app: app) if Dir.exists?(attachment_path(id: "", uuid: c.uuid, app: app))
             c.destroy
 
             ""

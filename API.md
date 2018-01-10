@@ -226,14 +226,14 @@ CipherString.
 
 ### URLs
 
-By default, BitWarden uses three different subdomains of `bitwarden.com`, one
+By default, BitWarden uses four different subdomains of `bitwarden.com`, one
 as the `$baseURL` which does most API operations, one as the `$identityURL`
 which handles logins (but not signups for some reason) and issues OAuth tokens,
 and an `$iconURL` which just fetches, caches, and serves requests for site
-icons.
+icons. It also uses `$cdnURL`, where the attachments are downloaded from.
 
 When configuring a self-hosted environment in the device apps before logging
-in, all three of these are assumed to be the same URL.
+in, all four of these are assumed to be the same URL.
 
 ### Signup
 
@@ -569,6 +569,61 @@ Send an empty `DELETE` request to `$baseURL/ciphers/(cipher UUID)`:
 	Authorization: Bearer (access_token)
 
 A successful but zero-length response will be returned.
+
+### Adding an attachment
+
+Send a `POST` request to `$baseURL/ciphers/(cipher UUID)/attachment`
+
+It is a multipart/form-data post, with the file under the `data`-attribute the single posted entity.
+
+
+	POST $baseURL/ciphers/(cipher UUID)/attachment
+	Content-type: application/json
+	Authorization: Bearer $access_token
+	{
+		"data": {
+			"filename": "encrypted_filename"
+			"tempfile": blob
+		}
+	}
+
+The JSON response will then be the complete cipher item, but now containing an entry for the new attachment:
+
+{
+	"FolderId"=>nil,
+	...
+	"Data"=> ...,
+	"Attachments"=>
+		[	{	"Id"=>"7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
+	  		"Url"=> "https://cdn.bitwarden.com/attachments/(cipher UUID)/7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
+	  		"FileName"=> "2.GOkRA8iZio1KxB+UkJpfcA==|/Mc8ACbPr9CRRQmNKPYHVg==|4BBQf8YTbPupap6qR97qMdn0NJ88GdTgDPIyBsQ46aA=",
+	  		"Size"=>"65",
+	  		"SizeName"=>"65 Bytes",
+	  		"Object"=>"attachment"
+	  	}
+	  ],
+	...,
+	"Object"=>"cipher"
+}
+
+### Deleting an attachment
+
+Send an empty `DELETE` request to `$baseURL/ciphers/(cipher UUID)/attachment/(attachment id)`:
+
+	DELETE $baseURL/ciphers/(cipher UUID)/attachment/(attachment id)
+	Authorization: Bearer (access_token)
+
+A successful but zero-length response will be returned.
+
+### Downloading an attachment
+
+$cdn_url using the official server is https://cdn.bitwarden.com.
+
+Send an unauthenticated `GET` request to `$cdn_url/attachments/(cipher UUID)/(attachment id)`:
+
+	GET $cdn_url/attachments/(cipher UUID)/(attachment id)
+
+The file will be sent as a response.
 
 ### Folders
 
