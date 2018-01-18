@@ -23,6 +23,7 @@ RACK_ENV ||= (ENV["RACK_ENV"] || "development")
 require "sinatra/base"
 require "sinatra/namespace"
 require "cgi"
+require "filesize"
 
 require "#{APP_ROOT}/lib/bitwarden.rb"
 require "#{APP_ROOT}/lib/helper.rb"

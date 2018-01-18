@@ -58,7 +58,7 @@ module BitwardenRuby
     end
 
     def human_file_size(byte_size:)
-      "#{byte_size} Bytes"
+      Filesize.from("#{byte_size} b").pretty
     end
   end
 end
