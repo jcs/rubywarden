@@ -40,7 +40,7 @@ module BitwardenRuby
       return c
     end
 
-    def delete_cipher uuid:, attachment_id:, app:
+    def delete_attachment uuid:, attachment_id:, app:
       cipher = retrieve_cipher uuid: uuid
       unless attachment_id =~ /\A[0-9a-f]{32}\z/
         return validation_error("invalid attachment id")

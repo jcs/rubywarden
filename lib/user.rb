@@ -70,7 +70,7 @@ class User < DBModel
       "Id" => self.uuid,
       "Name" => self.name,
       "Email" => self.email,
-      "EmailVerified" => self.email_verified,
+      "EmailVerified" => true,
       "Premium" => self.premium,
       "MasterPasswordHint" => self.password_hint,
       "Culture" => self.culture,

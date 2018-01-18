@@ -67,11 +67,11 @@ module BitwardenRuby
           end
 
           delete "/ciphers/:uuid/attachment/:attachment_id" do
-            delete_cipher uuid: params[:uuid], attachment_id: params[:attachment_id], app: app
+            delete_attachment uuid: params[:uuid], attachment_id: params[:attachment_id], app: app
           end
 
           post "/ciphers/:uuid/attachment/:attachment_id/delete" do
-            delete_cipher uuid: params[:uuid], attachment_id: params[:attachment_id], app: app
+            delete_attachment uuid: params[:uuid], attachment_id: params[:attachment_id], app: app
           end
         end # BASE_URL
 

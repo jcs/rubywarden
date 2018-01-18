@@ -89,5 +89,40 @@ module BitwardenRuby
         }).to_json
       end
     end # update_cipher
+
+    def delete_cipher app:
+      d = device_from_bearer
+      if !d
+        return validation_error("invalid bearer")
+      end
+
+      c = nil
+      if params[:uuid].blank? ||
+      !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
+        return validation_error("invalid cipher")
+      end
+
+      FileUtils.rm_r attachment_path(id: "", uuid: c.uuid, app: app) if Dir.exists?(attachment_path(id: "", uuid: c.uuid, app: app))
+      c.destroy
+
+      ""
+    end # delete_cipher
+
+    def delete_folder
+      d = device_from_bearer
+      if !d
+        return validation_error("invalid bearer")
+      end
+
+      f = nil
+      if params[:uuid].blank? ||
+      !(f = Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
+        return validation_error("invalid folder")
+      end
+
+      f.destroy
+
+      ""
+    end
   end # RequestHelpers
 end # BitwardenRuby

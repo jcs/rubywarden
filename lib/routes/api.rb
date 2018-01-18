@@ -213,21 +213,11 @@ module BitwardenRuby
 
           # delete a cipher
           delete "/ciphers/:uuid" do
-            d = device_from_bearer
-            if !d
-              return validation_error("invalid bearer")
-            end
+            delete_cipher app: app
+          end
 
-            c = nil
-            if params[:uuid].blank? ||
-            !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
-              return validation_error("invalid cipher")
-            end
-
-            FileUtils.rm_r attachment_path(id: "", uuid: c.uuid, app: app) if Dir.exists?(attachment_path(id: "", uuid: c.uuid, app: app))
-            c.destroy
-
-            ""
+          post "/ciphers/:uuid/delete" do
+            delete_cipher app: app
           end
 
           #
@@ -312,22 +302,12 @@ module BitwardenRuby
 
           # delete a folder
           delete "/folders/:uuid" do
-            d = device_from_bearer
-            if !d
-              return validation_error("invalid bearer")
-            end
-
-            f = nil
-            if params[:uuid].blank? ||
-            !(f = Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
-              return validation_error("invalid folder")
-            end
-
-            f.destroy
-
-            ""
+            delete_folder
           end
 
+          post "/folders/:uuid/delete" do
+            delete_folder
+          end
           #
           # device push tokens
           #
