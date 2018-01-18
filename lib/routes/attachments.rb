@@ -67,20 +67,11 @@ module BitwardenRuby
           end
 
           delete "/ciphers/:uuid/attachment/:attachment_id" do
-            cipher = retrieve_cipher uuid: params[:uuid]
-            unless params[:attachment_id] =~ /\A[0-9a-f]{32}\z/
-              return validation_error("invalid attachment id")
-            end
-            cipher.remove_attachment attachment_id: params[:attachment_id]
-            path = attachment_path(id: params[:attachment_id], uuid: params[:uuid], app: app)
-            File.delete path if File.exists? path
-            Cipher.transaction do
-              if !cipher.save
-                return validation_error("error saving")
-              end
+            delete_cipher uuid: params[:uuid], attachment_id: params[:attachment_id], app: app
+          end
 
-              ""
-            end
+          post "/ciphers/:uuid/attachment/:attachment_id/delete" do
+            delete_cipher uuid: params[:uuid], attachment_id: params[:attachment_id], app: app
           end
         end # BASE_URL
 

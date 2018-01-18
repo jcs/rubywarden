@@ -40,6 +40,23 @@ module BitwardenRuby
       return c
     end
 
+    def delete_cipher uuid:, attachment_id:, app:
+      cipher = retrieve_cipher uuid: uuid
+      unless attachment_id =~ /\A[0-9a-f]{32}\z/
+        return validation_error("invalid attachment id")
+      end
+      cipher.remove_attachment attachment_id: attachment_id
+      path = attachment_path(id: attachment_id, uuid: uuid, app: app)
+      Cipher.transaction do
+        if !cipher.save
+          return validation_error("error saving")
+        end
+        File.delete path if File.exists? path
+
+        ""
+      end
+    end
+
     def human_file_size(byte_size:)
       "#{byte_size} Bytes"
     end
