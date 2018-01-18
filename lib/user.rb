@@ -76,7 +76,7 @@ class User < DBModel
       "Culture" => self.culture,
       "TwoFactorEnabled" => self.two_factor_enabled?,
       "Key" => self.key,
-      "PrivateKey" => nil,
+      "PrivateKey" => self.private_key,
       "SecurityStamp" => self.security_stamp,
       "Organizations" => [],
       "Object" => "profile"

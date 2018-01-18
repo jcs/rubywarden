@@ -43,12 +43,6 @@ module BitwardenRuby
         if !js.strip.blank?
           params.merge!(JSON.parse(js))
         end
-      ## needed for the web vault, which doesn't use the content-type
-      elsif request.accept.to_s.match(/application\/json/) && !request.content_type.to_s.match(/application\/x-www-form-urlencoded/)
-        js = request.body.read.to_s
-        if !js.strip.blank?
-          params.merge!(JSON.parse(js))
-        end
       end
 
       # some bitwarden apps send params with uppercased first letter, some all
