@@ -21,12 +21,15 @@ require_relative 'routes/api'
 require_relative 'routes/icons'
 require_relative 'routes/identity'
 require_relative 'routes/attachments'
+require_relative 'routes/account'
 
 module BitwardenRuby
   class App < Sinatra::Base
     register Sinatra::Namespace
 
     set :root, File.expand_path("..", File.dirname(__FILE__))
+    set :public_folder, Proc.new { File.join(root, "public") }
+
     configure do
       enable :logging
     end
@@ -36,6 +39,12 @@ module BitwardenRuby
 
     before do
       if request.content_type.to_s.match(/\Aapplication\/json(;|\z)/)
+        js = request.body.read.to_s
+        if !js.strip.blank?
+          params.merge!(JSON.parse(js))
+        end
+      ## needed for the web vault, which doesn't use the content-type
+      elsif request.accept.to_s.match(/application\/json/) && !request.content_type.to_s.match(/application\/x-www-form-urlencoded/)
         js = request.body.read.to_s
         if !js.strip.blank?
           params.merge!(JSON.parse(js))
@@ -56,5 +65,6 @@ module BitwardenRuby
     register BitwardenRuby::Routing::Icons
     register BitwardenRuby::Routing::Identity
     register BitwardenRuby::Routing::Attachments
+    register BitwardenRuby::Routing::Account
   end
 end

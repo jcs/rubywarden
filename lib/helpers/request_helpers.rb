@@ -15,8 +15,13 @@
 #
 module BitwardenRuby
   module RequestHelpers
+
+    def web_vault_request?
+      !!(params[:client_id].to_s == "web")
+    end
+
     def device_from_bearer
-      if m = request.env["HTTP_AUTHORIZATION"].to_s.match(/^Bearer (.+)/)
+      if m = (request.env["HTTP_AUTHORIZATION"].to_s.match(/^Bearer (.+)/) || request.env["HTTP_CONTENT_LANGUAGE"].to_s.match(/^Bearer (.+)/))
         token = m[1]
         if (d = Device.find_by_access_token(token))
           if d.token_expires_at >= Time.now
@@ -44,5 +49,45 @@ module BitwardenRuby
         "Object" => "error",
       }.to_json ]
     end
-  end
-end
+
+    def update_cipher
+      d = device_from_bearer
+      if !d
+        halt validation_error("invalid bearer")
+      end
+
+      c = nil
+      if params[:uuid].blank? || !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
+        halt validation_error("invalid cipher")
+      end
+
+      need_params(:type, :name) do |p|
+        halt validation_error("#{p} cannot be blank")
+      end
+
+      begin
+        Bitwarden::CipherString.parse(params[:name])
+      rescue Bitwarden::InvalidCipherString
+        halt validation_error("Invalid name")
+      end
+
+      if !params[:folderid].blank?
+        if !Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:folderid])
+          halt validation_error("Invalid folder")
+        end
+      end
+
+      c.update_from_params(params)
+
+      Cipher.transaction do
+        if !c.save
+          halt validation_error("error saving")
+        end
+
+        c.to_hash.merge({
+          "Edit" => true,
+        }).to_json
+      end
+    end # update_cipher
+  end # RequestHelpers
+end # BitwardenRuby

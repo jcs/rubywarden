@@ -40,12 +40,9 @@ module BitwardenRuby
               need_params(
                 :client_id,
                 :grant_type,
-                :deviceidentifier,
-                :devicename,
-                :devicetype,
                 :password,
                 :scope,
-                :username,
+                :username
               ) do |p|
                 return validation_error("#{p} cannot be blank")
               end
@@ -87,10 +84,17 @@ module BitwardenRuby
                 d.uuid = params[:deviceidentifier]
               end
 
-              d.type = params[:devicetype]
-              d.name = params[:devicename]
-              if params[:devicepushtoken].present?
-                d.push_token = params[:devicepushtoken]
+
+              unless web_vault_request?
+                need_params(
+                  :devicename,
+                  :deviceidentifier,
+                  :devicetype
+                  ) do |p|
+                  return validation_error("#{p} cannot be blank")
+                end
+                d.type = params[:devicetype]
+                d.name = params[:devicename]
               end
             else
               return validation_error("grant type not supported")
@@ -103,14 +107,16 @@ module BitwardenRuby
                 return validation_error("Unknown error")
               end
 
-              {
+              response = {
                 :access_token => d.access_token,
                 :expires_in => (d.token_expires_at - Time.now).floor,
                 :token_type => "Bearer",
                 :refresh_token => d.refresh_token,
-                :Key => d.user.key,
+                :Key => d.user.key
                 # TODO: when to include :privateKey and :TwoFactorToken?
-              }.to_json
+              }
+              response[:PrivateKey] = d.user.private_key if web_vault_request?
+              response.to_json
             end
           end
         end

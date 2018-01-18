@@ -38,6 +38,10 @@ module BitwardenRuby
               return validation_error("Invalid key")
             end
 
+            if web_vault_request? && !params[:keys][:encryptedPrivateKey].to_s.match(/^2\..+\|.+/)
+              return validation_error("Invalid key")
+            end
+
             begin
               Bitwarden::CipherString.parse(params[:key])
             rescue Bitwarden::InvalidCipherString
@@ -94,6 +98,27 @@ module BitwardenRuby
           #
           # ciphers
           #
+          get "/ciphers" do
+            d = device_from_bearer
+            if !d
+              return validation_error("invalid bearer")
+            end
+            {
+              "Data" => d.user.ciphers.map{|f| f.to_hash},
+              "Object" => "list",
+            }.to_json
+          end
+
+          get "/ciphers/:uuid" do
+            c = nil
+
+            if !(c = Cipher.find_by_uuid(params[:uuid]))
+             return validation_error("invalid cipher")
+            end
+            c.to_hash.merge({
+                "Edit" => true,
+            }).to_json
+          end
 
           # create a new cipher
           post "/ciphers" do
@@ -133,46 +158,57 @@ module BitwardenRuby
             end
           end
 
-          # update a cipher
-          put "/ciphers/:uuid" do
+          # import ciphers using web-vault
+          post "/ciphers/import" do
             d = device_from_bearer
             if !d
               return validation_error("invalid bearer")
             end
 
-            c = nil
-            if params[:uuid].blank? ||
-            !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
-              return validation_error("invalid cipher")
-            end
-
-            need_params(:type, :name) do |p|
-              return validation_error("#{p} cannot be blank")
-            end
-
-            begin
-              Bitwarden::CipherString.parse(params[:name])
-            rescue Bitwarden::InvalidCipherString
-              return validation_error("Invalid name")
-            end
-
-            if !params[:folderid].blank?
-              if !Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:folderid])
-                return validation_error("Invalid folder")
+            #First we create all the folders
+            params[:folders].each do |p|
+              f = Folder.new
+              f.user_uuid = d.user_uuid
+              f.update_from_params(p)
+              Folder.transaction do
+                if !f.save
+                  return validation_error("error saving")
+                end
               end
             end
 
-            c.update_from_params(params)
-
-            Cipher.transaction do
-              if !c.save
-                return validation_error("error saving")
+            find_folder_uuid = lambda do |i, user_uuid:|
+              folder_index = params.dig(:folderrelationships, i, "value")
+              if folder_index
+                folder_name = params.dig(:folders, folder_index.to_i, "name")
+                Folder.find_by_user_uuid_and_name(d.user_uuid, folder_name).uuid
+              else
+                nil
               end
-
-              c.to_hash.merge({
-                "Edit" => true,
-              }).to_json
             end
+
+            # We create each CipherString
+            params[:ciphers].each_with_index do |p,i|
+              c = Cipher.new
+              c.user_uuid = d.user_uuid
+              c.update_from_params(p)
+              c.folder_uuid = find_folder_uuid.call(i, user_uuid: d.user_uuid)
+              Cipher.transaction do
+                if !c.save
+                  return validation_error("error saving")
+                end
+              end
+            end
+            ""
+          end
+          # update a cipher
+          put "/ciphers/:uuid" do
+            update_cipher
+          end
+
+          # update a cipher via web vault
+          post "/ciphers/:uuid" do
+            update_cipher
           end
 
           # delete a cipher
@@ -199,6 +235,18 @@ module BitwardenRuby
           #
 
           # create a new folder
+          # retrieve folder
+          get "/folders" do
+            d = device_from_bearer
+            if !d
+              return validation_error("invalid bearer")
+            end
+            {
+              "Data" => d.user.folders.map{|f| f.to_hash},
+              "Object" => "list",
+            }.to_json
+          end
+
           post "/folders" do
             d = device_from_bearer
             if !d
@@ -319,8 +367,12 @@ module BitwardenRuby
               ""
             end
           end
-        end
-      end
-    end
-  end
-end
+
+          get "/collections" do
+            {"Data" => [],"Object" => "list"}.to_json
+          end
+        end # namespace
+      end # registerend
+    end # Api
+  end # Routing
+end # BitwardenRuby
