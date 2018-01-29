@@ -154,7 +154,7 @@ The values for `name`, `notes`, `login.uris[0].uri`, `login.username`, and
 leading `2` indicating its type (`AesCbc256_HmacSha256_B64`).
 
 To decrypt a value, the CipherString must be broken up into its IV, cipher
-text, and MAC, then each part Base64-decoded.  The MAC is calculated using
+text, and MAC, then each part Base64-decoded. The MAC is calculated using
 `$macKey` and securely compared to the presented MAC, and if equal, the cipher
 text is then decrypted using `$encKey`:
 
@@ -580,7 +580,7 @@ Send a `POST` request to `$baseURL/ciphers/delete`
 
 	{
 		"ids": ["f3562489-b320-42d3-8e98-e809a6df5b7a","81fc01f4-412b-41a9-9bd6-a3c39abf2699"]
-  }
+	}
 
 A successful but zero-length response will be returned.
 
@@ -595,7 +595,7 @@ Send a `POST` request to `$baseURL/ciphers/move`
 	{
 		"ids": ["f3562489-b320-42d3-8e98-e809a6df5b7a","81fc01f4-412b-41a9-9bd6-a3c39abf2699"],
 		"folderId": "fb7043c6-5a62-4054-b9d0-fb86e9a04712"
-  	}
+		}
 
 A successful but zero-length response will be returned.
 
@@ -625,13 +625,13 @@ The JSON response will then be the complete cipher item, but now containing an e
 		"Attachments"=>
 		[
 			{	"Id"=>"7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
-	  			"Url"=> "https://cdn.bitwarden.com/attachments/(cipher UUID)/7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
-	  			"FileName"=> "2.GOkRA8iZio1KxB+UkJpfcA==|/Mc8ACbPr9CRRQmNKPYHVg==|4BBQf8YTbPupap6qR97qMdn0NJ88GdTgDPIyBsQ46aA=",
-	  			"Size"=>"65",
-	  			"SizeName"=>"65 Bytes",
-	  			"Object"=>"attachment"
-	  		}
-	  	],
+					"Url"=> "https://cdn.bitwarden.com/attachments/(cipher UUID)/7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
+					"FileName"=> "2.GOkRA8iZio1KxB+UkJpfcA==|/Mc8ACbPr9CRRQmNKPYHVg==|4BBQf8YTbPupap6qR97qMdn0NJ88GdTgDPIyBsQ46aA=",
+					"Size"=>"65",
+					"SizeName"=>"65 Bytes",
+					"Object"=>"attachment"
+				}
+			],
 		...,
 		"Object"=>"cipher"
 	}
