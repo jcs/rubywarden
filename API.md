@@ -595,7 +595,7 @@ Send a `POST` request to `$baseURL/ciphers/move`
 	{
 		"ids": ["f3562489-b320-42d3-8e98-e809a6df5b7a","81fc01f4-412b-41a9-9bd6-a3c39abf2699"],
 		"folderId": "fb7043c6-5a62-4054-b9d0-fb86e9a04712"
-		}
+	}
 
 A successful but zero-length response will be returned.
 
