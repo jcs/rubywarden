@@ -582,7 +582,23 @@ Send a `POST` request to `$baseURL/ciphers/delete`
 		"ids": ["f3562489-b320-42d3-8e98-e809a6df5b7a","81fc01f4-412b-41a9-9bd6-a3c39abf2699"]
   }
 
-	A successful but zero-length response will be returned.
+A successful but zero-length response will be returned.
+
+### Moving multiple items to a folder
+
+Send a `POST` request to `$baseURL/ciphers/delete`
+
+	POST $baseURL/ciphers/move
+	Content-type: application/json
+	Authorization: Bearer (access_token)
+
+	{
+		"ids": ["f3562489-b320-42d3-8e98-e809a6df5b7a","81fc01f4-412b-41a9-9bd6-a3c39abf2699"],
+		"folderId": "fb7043c6-5a62-4054-b9d0-fb86e9a04712"
+  }
+
+A successful but zero-length response will be returned.
+
 ### Adding an attachment
 
 Send a `POST` request to `$baseURL/ciphers/(cipher UUID)/attachment`

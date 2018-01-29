@@ -202,6 +202,7 @@ module BitwardenRuby
             ""
           end
 
+          # deleting multiple ciphers at once
           post "/ciphers/delete" do
             need_params(:ids) do |p|
               return validation_error("#{p} cannot be blank")
@@ -209,6 +210,41 @@ module BitwardenRuby
 
             params[:ids].each do |id|
               delete_cipher app: app, uuid: id
+            end
+
+            ""
+          end
+
+          # moving ciphers to a folder
+          post "/ciphers/move" do
+            need_params(:ids, :folderid) do |p|
+              return validation_error("#{p} cannot be blank")
+            end
+
+            d = device_from_bearer
+            if !d
+              return validation_error("invalid bearer")
+            end
+
+            if !Folder.find_by_user_uuid_and_uuid(d.user_uuid, params[:folderid])
+              return validation_error("Invalid folder")
+            end
+
+            ciphers = params[:ids].map do |uuid|
+              c = nil
+              if uuid.blank? || !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, uuid))
+                return validation_error("invalid cipher")
+              end
+              c.folder_uuid = params[:folderid]
+              c
+            end
+
+            Cipher.transaction do
+              ciphers.each do |cipher|
+                if !cipher.save
+                  return "failed updating folder"
+                end
+              end
             end
 
             ""

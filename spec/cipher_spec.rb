@@ -158,6 +158,74 @@ describe "cipher module" do
     end
   end
 
+  it "should allow moving multiple ciphers to a folder" do
+    uuids = []
+    post_json "/api/ciphers", {
+      :type => 2,
+      :folderId => nil,
+      :organizationId => nil,
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+      :notes => nil,
+      :favorite => false
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    uuids << last_json_response["Id"]
+
+    post_json "/api/folders", {
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    folder_id = last_json_response["Id"]
+
+    post_json "/api/ciphers/move", {
+      ids: uuids,
+      folderId: folder_id
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.must_equal 200
+
+    uuids.each do |uuid|
+      Cipher.find_by_uuid(uuid).folder_uuid.must_equal folder_id
+    end
+  end
+
+    it "should not allow moving multiple ciphers to a bogus folder" do
+    uuids = []
+    post_json "/api/ciphers", {
+      :type => 2,
+      :folderId => nil,
+      :organizationId => nil,
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+      :notes => nil,
+      :favorite => false
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    uuids << last_json_response["Id"]
+
+    folder_id = uuids.first.reverse
+
+    post_json "/api/ciphers/move", {
+      ids: uuids,
+      folderId: folder_id
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.wont_equal 200
+
+    uuids.each do |uuid|
+      Cipher.find_by_uuid(uuid).folder_uuid.must_be_nil
+    end
+  end
+
   it "should not allow creating, updating, or deleting bogus ciphers" do
     post_json "/api/ciphers", {
       :type => -5,
