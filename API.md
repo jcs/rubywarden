@@ -595,7 +595,7 @@ Send a `POST` request to `$baseURL/ciphers/move`
 	{
 		"ids": ["f3562489-b320-42d3-8e98-e809a6df5b7a","81fc01f4-412b-41a9-9bd6-a3c39abf2699"],
 		"folderId": "fb7043c6-5a62-4054-b9d0-fb86e9a04712"
-  }
+  	}
 
 A successful but zero-length response will be returned.
 
@@ -618,22 +618,23 @@ It is a multipart/form-data post, with the file under the `data`-attribute the s
 
 The JSON response will then be the complete cipher item, but now containing an entry for the new attachment:
 
-{
-	"FolderId"=>nil,
-	...
-	"Data"=> ...,
-	"Attachments"=>
-		[	{	"Id"=>"7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
-	  		"Url"=> "https://cdn.bitwarden.com/attachments/(cipher UUID)/7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
-	  		"FileName"=> "2.GOkRA8iZio1KxB+UkJpfcA==|/Mc8ACbPr9CRRQmNKPYHVg==|4BBQf8YTbPupap6qR97qMdn0NJ88GdTgDPIyBsQ46aA=",
-	  		"Size"=>"65",
-	  		"SizeName"=>"65 Bytes",
-	  		"Object"=>"attachment"
-	  	}
-	  ],
-	...,
-	"Object"=>"cipher"
-}
+	{
+		"FolderId"=>nil,
+		...
+		"Data"=> ...,
+		"Attachments"=>
+		[
+			{	"Id"=>"7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
+	  			"Url"=> "https://cdn.bitwarden.com/attachments/(cipher UUID)/7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
+	  			"FileName"=> "2.GOkRA8iZio1KxB+UkJpfcA==|/Mc8ACbPr9CRRQmNKPYHVg==|4BBQf8YTbPupap6qR97qMdn0NJ88GdTgDPIyBsQ46aA=",
+	  			"Size"=>"65",
+	  			"SizeName"=>"65 Bytes",
+	  			"Object"=>"attachment"
+	  		}
+	  	],
+		...,
+		"Object"=>"cipher"
+	}
 
 ### Deleting an attachment
 
