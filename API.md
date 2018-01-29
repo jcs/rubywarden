@@ -586,7 +586,7 @@ A successful but zero-length response will be returned.
 
 ### Moving multiple items to a folder
 
-Send a `POST` request to `$baseURL/ciphers/delete`
+Send a `POST` request to `$baseURL/ciphers/move`
 
 	POST $baseURL/ciphers/move
 	Content-type: application/json
