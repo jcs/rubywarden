@@ -118,6 +118,46 @@ describe "cipher module" do
     Cipher.find_by_uuid(uuid).must_be_nil
   end
 
+  it "should allow deleting multiple ciphers" do
+    uuids = []
+    post_json "/api/ciphers", {
+      :type => 2,
+      :folderId => nil,
+      :organizationId => nil,
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+      :notes => nil,
+      :favorite => false
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    uuids << last_json_response["Id"]
+
+    post_json "/api/ciphers", {
+      :type => 2,
+      :folderId => nil,
+      :organizationId => nil,
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+      :notes => nil,
+      :favorite => false
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    uuids << last_json_response["Id"]
+
+    post_json "/api/ciphers/delete", {
+      ids: uuids
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+    last_response.status.must_equal 200
+
+    uuids.each do |uuid|
+      Cipher.find_by_uuid(uuid).must_be_nil
+    end
+  end
+
   it "should not allow creating, updating, or deleting bogus ciphers" do
     post_json "/api/ciphers", {
       :type => -5,

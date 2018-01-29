@@ -90,21 +90,19 @@ module BitwardenRuby
       end
     end # update_cipher
 
-    def delete_cipher app:
+    def delete_cipher app:, uuid:
       d = device_from_bearer
       if !d
-        return validation_error("invalid bearer")
+        halt validation_error("invalid bearer")
       end
 
       c = nil
-      if params[:uuid].blank? ||
-      !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
-        return validation_error("invalid cipher")
+      if uuid.blank? || !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, uuid))
+        halt validation_error("invalid cipher")
       end
 
       FileUtils.rm_r attachment_path(id: "", uuid: c.uuid, app: app) if Dir.exists?(attachment_path(id: "", uuid: c.uuid, app: app))
       c.destroy
-
       ""
     end # delete_cipher
 
