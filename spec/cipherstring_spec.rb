@@ -47,7 +47,8 @@ describe "bitwarden encryption stuff" do
 
   it "should encrypt and decrypt properly" do
     ik = Bitwarden.makeKey("password", "user@example.com")
-    k = Bitwarden.makeEncKey(ik)
+    ek = Bitwarden.makeEncKey(ik)
+    k = Bitwarden.decrypt(ek, ik, nil)
     j = Bitwarden.encrypt("hi there", k[0, 32], k[32, 32])
 
     cs = Bitwarden::CipherString.parse(j)
