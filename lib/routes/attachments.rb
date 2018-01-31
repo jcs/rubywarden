@@ -84,7 +84,7 @@ module BitwardenRuby
           end
           path = attachment_path(id: params[:attachment_id], uuid: params[:uuid], app: app)
 
-          if File.exists? path
+          if File.exist? path
             send_file path
           else
             halt 404

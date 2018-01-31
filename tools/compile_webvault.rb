@@ -3,7 +3,7 @@ require 'getoptlong'
 require 'json'
 
 def usage
-  puts "usage: #{$PROGRAM_NAME} -h http://localhost:4657"
+  puts "usage: #{$PROGRAM_NAME} -h http://localhost:4567"
   exit 1
 end
 
@@ -28,7 +28,7 @@ usage unless host
 FileUtils.mkdir_p "tmp"
 FileUtils.cd "tmp" do
   if Dir.exists?("web")
-    system "git pull"
+    system "git pull origin master"
   else
     system "git clone https://github.com/bitwarden/web.git"
   end

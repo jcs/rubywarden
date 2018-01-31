@@ -51,7 +51,7 @@ module BitwardenRuby
         if !cipher.save
           return validation_error("error saving")
         end
-        File.delete path if File.exists? path
+        File.delete path if File.exist? path
 
         ""
       end

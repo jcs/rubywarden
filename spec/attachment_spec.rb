@@ -6,7 +6,7 @@ require_relative "spec_helper.rb"
 
 describe "attachment module" do
   before do
-    FileUtils.rm_r "tmp/spec" if Dir.exists?("tmp/spec")
+    FileUtils.rm_r "tmp/spec" if Dir.exist?("tmp/spec")
     FileUtils.mkpath "tmp/spec"
     app.set :root, "tmp/spec"
 
@@ -103,6 +103,6 @@ describe "attachment module" do
     }
 
     Cipher.find_by_uuid(@cipher_uuid).must_be_nil
-    Dir.exists?("tmp/spec/data/attachments/#{@cipher_uuid}").wont_equal true
+    Dir.exist?("tmp/spec/data/attachments/#{@cipher_uuid}").wont_equal true
   end
 end
