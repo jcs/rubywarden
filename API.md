@@ -694,3 +694,47 @@ To fetch an icon for a URL, issue an unauthenticated `GET` to
 	(no authentication header)
 
 The binary response will contain the icon.
+
+### Settings
+
+Equivalent Domains are retrieved by issuing a `GET` to `$baseURL/settings/domains`
+
+	GET $baseURL/settings/domains
+	Accept: application/json
+	Authorization: Bearer $access_token
+
+
+JSON response:
+
+	{
+		"EquivalentDomains": [["amazon.de","amazon.it"]],
+		"GlobalEquivalentDomains": [
+			{"Type":2,"Domains":["ameritrade.com","tdameritrade.com"],"Excluded":false},
+			{"Type":3,"Domains":["bankofamerica.com","bofa.com","mbna.com","usecfo.com"],"Excluded":false},
+			...
+		],
+		"Object":"domains"
+	}
+
+Equivalent Domains are set by issuing a `POST` to `$baseURL/settings/domains`
+
+	POST $baseURL/settings/domains
+	Content-type: application/json
+	Authorization: Bearer $access_token
+
+	{
+		EquivalentDomains: [["amazon.de","amazon.it"]],
+		ExcludedGlobalEquivalentDomains: [2]
+	}
+
+JSON response:
+
+	{
+		"EquivalentDomains": [["amazon.de","amazon.it"]],
+		"GlobalEquivalentDomains": [
+			{"Type":2,"Domains":["ameritrade.com","tdameritrade.com"],"Excluded":true},
+			{"Type":3,"Domains":["bankofamerica.com","bofa.com","mbna.com","usecfo.com"],"Excluded":false},
+			...
+		],
+		"Object":"domains"
+	}

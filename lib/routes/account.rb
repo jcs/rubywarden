@@ -93,6 +93,74 @@ module BitwardenRuby
           post "/accounts/email-token" do
            validation_error("Not implemented yet")
           end
+
+          # Domain rules
+          get "/settings/domains" do
+            d = device_from_bearer
+            if !d
+              return validation_error("invalid bearer")
+            end
+            equivalent_domains = EquivalentDomain.find_all_by_user_uuid(d.user_uuid).map do |dom|
+              JSON.parse(domain.domains)
+            end
+
+            global_domains = GlobalEquivalentDomain.active_for_user(user: d.user).map do |dom|
+              dom.to_hash
+            end
+
+            {
+              "EquivalentDomains" => equivalent_domains,
+              "GlobalEquivalentDomains" => global_domains,
+              "Object" => "domains"
+            }.to_json
+          end
+
+          post "/settings/domains" do
+            d = device_from_bearer
+            if !d
+              return validation_error("invalid bearer")
+            end
+
+            Db.connection.transaction do
+
+              EquivalentDomain.find_all_by_user_uuid(d.user_uuid).each do |dom|
+                dom.destroy
+              end
+
+              (params[:equivalentdomains] || []).each do |domains|
+                domain = EquivalentDomain.new
+                domain.user_uuid = d.user_uuid
+                domain.domains = domains.to_json
+                domain.save
+              end
+
+              ExcludedGlobalEquivalentDomain.find_all_by_user_uuid(d.user_uuid).each do |dom|
+                dom.destroy
+              end
+
+              (params[:excludedglobalequivalentdomains] || []).each do |domain_id|
+                 ged = GlobalEquivalentDomain.find_by_id(domain_id)
+                 if ged
+                   ged.exclude_for_user user: d.user
+                 end
+              end
+            end # transaction
+
+            equivalent_domains = EquivalentDomain.find_all_by_user_uuid(d.user_uuid).map do |dom|
+              JSON.parse(dom.domains)
+            end
+
+            global_domains = GlobalEquivalentDomain.active_for_user(user: d.user).map do |dom|
+              dom.to_hash
+            end
+
+            {
+              "EquivalentDomains" => equivalent_domains,
+              "GlobalEquivalentDomains" => global_domains,
+              "Object" => "domains"
+            }.to_json
+          end
+
         end # namespace
       end # registered
     end # Account

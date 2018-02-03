@@ -1,4 +1,4 @@
-require_relative "spec_helper.rb"
+require "spec_helper.rb"
 
 describe "identity module" do
   it "should return successful response to account creation" do
