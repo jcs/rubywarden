@@ -55,6 +55,38 @@ To run the test suite:
 
 	bundle exec rake test
 
+### Docker
+
+#### Build
+
+```bash
+docker build -t rtfpessoa/bitwarden-ruby:dev .
+```
+
+#### Run
+
+```bash
+curl -s -o bitwarden.sh \
+  https://raw.githubusercontent.com/jcs/bitwarden-ruby/master/scripts/bitwarden.sh \
+  && chmod +x bitwarden.sh
+```
+
+#### Run Standalone
+
+```bash
+docker run --rm -d rtfpessoa/bitwarden-ruby:latest rackup -p $APP_PORT config.ru
+```
+
+#### Tools
+
+```bash
+docker run -e RACK_ENV=production rtfpessoa/bitwarden-ruby:latest ruby tools/<script>.rb [parameters]
+```
+
+**NOTE:**
+> Any files needed need to be mounted with `-v`.
+> Example: `docker run -e RACK_ENV=production  -v /Users/example/Download/data.1pif:/bitwarden/data.1pif rtfpessoa/bitwarden-ruby:latest ruby tools/1password_import.rb -f /bitwarden/data.1pif -u example@example.com`
+
 ### 1Password Conversion
 
 Export everything from 1Password in its "1Password Interchange Format".

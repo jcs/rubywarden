@@ -40,11 +40,16 @@ ICONS_URL ||= "/icons"
 
 # whether to allow new users
 if !defined?(ALLOW_SIGNUPS)
-  ALLOW_SIGNUPS = (ENV["ALLOW_SIGNUPS"] || false)
+  ALLOW_SIGNUPS = (
+    ENV["ALLOW_SIGNUPS"] ||
+    (ENV["globalSettings__disableUserRegistration"] && ENV["globalSettings__disableUserRegistration"] != "true") ||
+    false
+  )
 end
 
 # create/load JWT signing keys
 Bitwarden::Token.load_keys
 
 # create/update tables
-Db.connect("#{APP_ROOT}/db/#{RACK_ENV}.sqlite3")
+DB_ROOT = (ENV["DB_ROOT"] || "#{APP_ROOT}/db")
+Db.connect("#{DB_ROOT}/#{RACK_ENV}.sqlite3")
