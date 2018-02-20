@@ -223,6 +223,52 @@ namespace BASE_URL do
     end
   end
 
+  # Retrieve equivalent domains
+  get "/settings/domains" do
+    d = device_from_bearer
+    return validation_error("invalid bearer") unless d
+
+    equivalent_domains(d.user).to_json
+  end
+
+  # Bulk update equivalent domains
+  post "/settings/domains" do
+    d = device_from_bearer
+    return validation_error("invalid bearer") unless d
+
+    if params[:excludedglobalequivalentdomains] != nil
+      return validation_error("Excluding global domains is unsupported")
+    end
+
+    need_params(:equivalentdomains) do |p|
+      return validation_error("#{p} cannot be blank")
+    end
+
+    Db.connection.transaction do
+      # delete all existing equivalent domains
+      EquivalentDomain.find_all_by_user_uuid(d.user_uuid).each do |dom|
+        EquivalentDomainName.find_all_by_domain_uuid(dom.uuid).each(&:destroy)
+        dom.destroy
+      end
+
+      # add all new equivalent domains
+      params[:equivalentdomains].each do |domains|
+        domain = EquivalentDomain.new
+        domain.user_uuid = d.user_uuid
+        domain.save
+
+        domains.each do |name|
+          equiv = EquivalentDomainName.new
+          equiv.domain = name
+          equiv.domain_uuid = domain.uuid
+          equiv.save
+        end
+      end
+    end
+
+    equivalent_domains(d.user).to_json
+  end
+
   # fetch profile and ciphers
   get "/sync" do
     d = device_from_bearer
@@ -234,11 +280,7 @@ namespace BASE_URL do
       "Profile" => d.user.to_hash,
       "Folders" => d.user.folders.map{|f| f.to_hash },
       "Ciphers" => d.user.ciphers.map{|c| c.to_hash },
-      "Domains" => {
-        "EquivalentDomains" => nil,
-        "GlobalEquivalentDomains" => [],
-        "Object" => "domains",
-      },
+      "Domains" => equivalent_domains(d.user),
       "Object" => "sync",
     }.to_json
   end

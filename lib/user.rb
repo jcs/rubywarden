@@ -58,6 +58,11 @@ class User < DBModel
       each{|f| f.user = self }
   end
 
+  def domains
+    @domains ||= EquivalentDomain.find_all_by_user_uuid(self.uuid).
+      each{|f| f.user = self }
+  end
+
   def has_password_hash?(hash)
     self.password_hash.timingsafe_equal_to(hash)
   end
