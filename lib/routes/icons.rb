@@ -14,7 +14,18 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-require File.dirname(__FILE__) + "/lib/bitwarden_ruby.rb"
-require "#{APP_ROOT}/lib/app.rb"
+module BitwardenRuby
+  module Routing
+    module Icons
+      def self.registered(app)
+        app.namespace ICONS_URL do
+          get "/:domain/icon.png" do
+            # TODO: do this service ourselves
 
-run BitwardenRuby::App
+            redirect "http://#{params[:domain]}/favicon.ico"
+          end
+        end
+      end
+    end
+  end
+end

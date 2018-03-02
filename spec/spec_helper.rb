@@ -12,7 +12,7 @@ end
 ALLOW_SIGNUPS = true
 
 require File.realpath(File.dirname(__FILE__) + "/../lib/bitwarden_ruby.rb")
-require "#{APP_ROOT}/lib/api.rb"
+require "#{APP_ROOT}/lib/app.rb"
 
 include Rack::Test::Methods
 
@@ -42,5 +42,5 @@ def json_request(verb, path, params = {}, headers = {})
 end
 
 def app
-  Sinatra::Application
+  BitwardenRuby::App
 end

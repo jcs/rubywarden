@@ -20,7 +20,7 @@ APP_ROOT = File.realpath(File.dirname(__FILE__) + "/../")
 
 RACK_ENV ||= (ENV["RACK_ENV"] || "development")
 
-require "sinatra"
+require "sinatra/base"
 require "sinatra/namespace"
 require "cgi"
 
