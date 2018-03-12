@@ -20,3 +20,5 @@ gem "rqrcode"
 gem "rake"
 gem "minitest"
 gem "rack-test"
+
+gem 'rubeepass', '~> 2.0', '>= 2.0.8'
