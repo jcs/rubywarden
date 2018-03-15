@@ -20,3 +20,7 @@ gem "rqrcode"
 gem "rake"
 gem "minitest"
 gem "rack-test"
+
+group :keepass, :optional => true do
+  gem 'rubeepass', '~> 3.0'
+end

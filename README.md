@@ -114,6 +114,33 @@ convert and import as many items as it can.
 This tool operates on the SQLite database directly (not through its REST API)
 so you can run it offline.
 
+### Keepass Conversion
+
+In order to use the Keepass converter, you will need to install the necessary 
+dependency, using `bundle install --with keepass`.
+
+There is no need to export your Keepass-database - you can use it as is.
+
+Once you have created your initial user account through `bitwarden-ruby`, run
+the conversion tool with your account e-mail address:
+
+```
+env RACK_ENV=production bundle exec ruby tools/keepass_import.rb -f /path/to/data.kdbx -u you@example.com
+```
+
+If your Keepass-database is secured using a keyfile, you can pass it using the `-k` parameter:
+
+```
+env RACK_ENV=production bundle exec ruby tools/keepass_import.rb -f /path/to/data.kdbx -k /path/to/keyfile.key -u you@example.com
+```
+
+It will prompt you for the master password you already created, and then
+convert and import as many items as it can.
+
+This tool operates on the SQLite database directly (not through its REST API)
+so you can run it offline.
+
+
 ### 2-Factor Authentication
 
 The Bitwarden browser extensions and mobile apps support accounts that require
