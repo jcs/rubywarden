@@ -21,4 +21,6 @@ gem "rake"
 gem "minitest"
 gem "rack-test"
 
-gem 'rubeepass', '~> 2.0', '>= 2.0.8'
+group :keepass, :optional => true do
+  gem 'rubeepass', '~> 3.0'
+end
