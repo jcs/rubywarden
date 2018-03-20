@@ -27,6 +27,9 @@ require "net/https"
 
 set :bind, "0.0.0.0"
 
+# log full queries, otherwise just pretty-printed request and response data
+RAW_QUERIES = false
+
 BASE_URL = "/api"
 IDENTITY_BASE_URL = "/identity"
 ICONS_URL = "/icons"
@@ -78,7 +81,9 @@ def proxy_to(url, method)
 
   uri = URI.parse(url)
   h = Net::HTTP.new(uri.host, uri.port)
-  h.set_debug_output STDOUT
+  if RAW_QUERIES
+    h.set_debug_output STDOUT
+  end
 
   if uri.scheme == "https"
     h.use_ssl = true
@@ -98,6 +103,15 @@ def proxy_to(url, method)
 
   post_data = request.body.read.to_s
 
+  unless RAW_QUERIES
+    if send_headers["Content-type"].to_s.match(/\/json/i)
+      puts "client JSON request:",
+        JSON.pretty_generate(JSON.parse(post_data))
+    else
+      puts "client request: #{post_data.inspect}"
+    end
+  end
+
   res = case method
   when :post
     res = h.post(uri.path, post_data, send_headers)
@@ -116,6 +130,22 @@ def proxy_to(url, method)
   }
 
   r = [ res.code.to_i, reply_headers, res.body ]
-  puts "proxy response: #{r.inspect}"
+
+  unless RAW_QUERIES
+    if reply_headers["Content-Type"].to_s.match(/\/json/)
+      begin
+        puts "proxy JSON reponse:",
+          JSON.pretty_generate(JSON.parse(res.body))
+      rescue JSON::ParserError => e
+        puts "failed parsing JSON response: #{e.message}"
+        puts "proxy response: #{res.body}"
+      end
+    elsif reply_headers["Content-Type"].to_s.match(/image\//i)
+      puts "(image data of size #{res.body.bytesize} returned)"
+    else
+      puts "proxy response: #{res.body}"
+    end
+  end
+
   r
 end
