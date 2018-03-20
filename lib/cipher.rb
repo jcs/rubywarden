@@ -20,9 +20,10 @@ class Cipher < DBModel
 
   attr_writer :user
 
-  TYPE_LOGIN = 1
-  TYPE_NOTE  = 2
-  TYPE_CARD  = 3
+  TYPE_LOGIN    = 1
+  TYPE_NOTE     = 2
+  TYPE_CARD     = 3
+  TYPE_IDENTITY = 4
 
   def self.type_s(type)
     case type
@@ -32,6 +33,8 @@ class Cipher < DBModel
       "note"
     when TYPE_CARD
       "card"
+    when TYPE_IDENTITY
+      "identity"
     else
       type.to_s
     end
