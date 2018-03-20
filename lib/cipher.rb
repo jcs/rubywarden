@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017 joshua stein <jcs@jcs.org>
+# Copyright (c) 2017-2018 joshua stein <jcs@jcs.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -40,6 +40,46 @@ class Cipher < DBModel
     end
   end
 
+  # shortcut to turn any field containing json data into an object
+  def method_missing(method, *args, &block)
+    if m = method.to_s.match(/^(.+)_unjson$/)
+      j = self.send(m[1])
+      j ? JSON.parse(j) : nil
+    else
+      super
+    end
+  end
+
+  # migrate from older style everything-in-data to separate fields
+  def migrate_data!
+    return if !self.data
+
+    js = JSON.parse(self.data)
+    return if !js
+
+    self.name = js.delete("Name")
+    self.notes = js.delete("Notes")
+    self.fields = js.delete("Fields").try(:to_json)
+
+    if self.type == TYPE_LOGIN
+      js["Uris"] = [
+        { "Uri" => js["Uri"], "Match" => nil },
+      ]
+      js.delete("Uri")
+    end
+
+    # move the remaining fields into the new dedicated field based on the type
+    fmap = {
+      TYPE_LOGIN => "login",
+      TYPE_NOTE => "securenote",
+      TYPE_CARD => "card",
+      TYPE_IDENTITY => "identity",
+    }
+    self.send("#{fmap[self.type]}=", js.to_json)
+
+    self.save || raise("failed migrating #{self.inspect}")
+  end
+
   def to_hash
     {
       "Id" => self.uuid,
@@ -50,8 +90,14 @@ class Cipher < DBModel
       "OrganizationId" => nil,
       "Attachments" => self.attachments,
       "OrganizationUseTotp" => false,
-      "Data" => JSON.parse(self.data.to_s),
       "Object" => "cipher",
+      "Name" => self.name,
+      "Notes" => self.notes,
+      "Fields" => self.fields_unjson,
+      "Login" => self.login_unjson,
+      "Card" => self.card_unjson,
+      "Identity" => self.identity_unjson,
+      "SecureNote" => self.securenote_unjson,
     }
   end
 
@@ -61,37 +107,52 @@ class Cipher < DBModel
     self.favorite = params[:favorite]
     self.type = params[:type].to_i
 
-    cdata = {
-      "Name" => params[:name]
-    }
+    self.name = params[:name]
+    self.notes = params[:notes]
+
+    self.fields = nil
+    if params[:fields]
+      # we have to ucfirst each key of each field in the array
+      tfields = []
+      params[:fields].each do |f|
+        tf = {}
+        f.each do |k,v|
+          tf[k.to_s.ucfirst] = v
+        end
+        tfields.push tf
+      end
+      self.fields = tfields.to_json
+    end
 
     case self.type
     when TYPE_LOGIN
+      tlogin = {}
       params[:login].each do |k,v|
-        cdata[k.to_s.ucfirst] = v
+        tlogin[k.to_s.ucfirst] = v
       end
+      self.login = tlogin.to_json
+
+    when TYPE_NOTE
+      tnote = {}
+      params[:securenote].each do |k,v|
+        tnote[k.to_s.ucfirst] = v
+      end
+      self.securenote = tnote.to_json
 
     when TYPE_CARD
+      tcard = {}
       params[:card].each do |k,v|
-        cdata[k.to_s.ucfirst] = v
+        tcard[k.to_s.ucfirst] = v
       end
+      self.card = tcard.to_json
+
+    when TYPE_IDENTITY
+      tid = {}
+      params[:identity].each do |k,v|
+        tid[k.to_s.ucfirst] = v
+      end
+      self.identity = tid.to_json
     end
-
-    cdata["Notes"] = params[:notes]
-
-    if params[:fields] && params[:fields].is_a?(Array)
-      cdata["Fields"] = params[:fields].map{|f|
-        fh = {}
-        f.each do |k,v|
-          fh[k.ucfirst] = v
-        end
-        fh
-      }
-    else
-      cdata["Fields"] = nil
-    end
-
-    self.data = cdata.to_json
   end
 
   def user

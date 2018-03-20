@@ -25,7 +25,7 @@ require "sqlite3"
 
 class Db
   class << self
-    DB_VERSION = 2
+    DB_VERSION = 3
 
     attr_reader :db, :db_file
 
@@ -81,7 +81,14 @@ class Db
         type INTEGER,
         data BLOB,
         favorite BOOLEAN,
-        attachments BLOB)
+        attachments BLOB,
+        name BLOB,
+        notes BLOB,
+        fields BLOB,
+        login BLOB,
+        card BLOB,
+        identity BLOB,
+        securenote BLOB)
       ")
 
       @db.execute("
@@ -160,6 +167,24 @@ class Db
           user_uuid STRING,
           name BLOB)
         ")
+
+      when 2
+        @db.execute("ALTER TABLE ciphers ADD name BLOB")
+        @db.execute("ALTER TABLE ciphers ADD notes BLOB")
+        @db.execute("ALTER TABLE ciphers ADD fields BLOB")
+        @db.execute("ALTER TABLE ciphers ADD login BLOB")
+        @db.execute("ALTER TABLE ciphers ADD card BLOB")
+        @db.execute("ALTER TABLE ciphers ADD identity BLOB")
+        @db.execute("ALTER TABLE ciphers ADD securenote BLOB")
+
+        # migrate each existing field in the data column to its new dedicated
+        # field
+        Cipher.clear_column_cache!
+        Cipher.all.each do |c|
+          c.migrate_data!
+        end
+
+        STDERR.puts "migrated all ciphers to new dedicated fields"
       end
 
       @db.execute("UPDATE schema_version SET version = #{version + 1}")
