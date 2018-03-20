@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017 joshua stein <jcs@jcs.org>
+# Copyright (c) 2017-2018 joshua stein <jcs@jcs.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -28,9 +28,18 @@ class DBModel
       end
     end
 
+    def all
+      fetch_columns
+
+      Db.execute("SELECT * FROM `#{table_name}` ORDER BY `#{primary_key}`").
+      map do |rec|
+        build_obj_from_rec(rec)
+      end
+    end
+
     # transform ruby data into sql
     def cast_data_for_column(data, col)
-      if !@columns
+      if !@columns.try(:any?)
         raise "need to fetch columns but in a query"
       end
 
@@ -41,13 +50,19 @@ class DBModel
         return (data == nil ? nil : data.to_i)
       when /integer/i
         return (data == nil ? nil : data.to_i)
+      when /blob/i
+        return (data == nil ? nil : data.to_s)
       else
         return data
       end
     end
 
+    def clear_column_cache!
+      @columns = {}
+    end
+
     def fetch_columns
-      return if defined?(@columns)
+      return if @columns.try(:any?)
 
       @columns = {}
 
@@ -81,20 +96,30 @@ class DBModel
 
       Db.execute("SELECT * FROM `#{table_name}` WHERE #{where} #{limit}",
       values).map do |rec|
-        obj = self.new
-        obj.new_record = false
-
-        rec.each do |k,v|
-          next if !k.is_a?(String)
-          obj.send("#{k}=", uncast_data_from_column(v, k))
-        end
-
-        obj
+        build_obj_from_rec(rec)
       end
     end
 
     def find_by_column(columns, values)
       find_all_by_column(columns, values, "LIMIT 1").first
+    end
+
+    def first
+      fetch_columns
+
+      rec = Db.execute("SELECT * FROM `#{table_name}` ORDER BY " <<
+        "`#{primary_key}` LIMIT 1").first
+
+      rec ? build_obj_from_rec(rec) : nil
+    end
+
+    def last
+      fetch_columns
+
+      rec = Db.execute("SELECT * FROM `#{table_name}` ORDER BY " <<
+        "`#{primary_key}` DESC LIMIT 1").first
+
+      rec ? build_obj_from_rec(rec) : nil
     end
 
     def primary_key
@@ -120,7 +145,7 @@ class DBModel
 
     # transform database data into ruby
     def uncast_data_from_column(data, col)
-      if !@columns
+      if !@columns.try(:any?)
         raise "need to fetch columns but in a query"
       end
 
@@ -147,6 +172,19 @@ class DBModel
       end
 
       k
+    end
+
+  private
+    def build_obj_from_rec(rec)
+      obj = self.new
+      obj.new_record = false
+
+      rec.each do |k,v|
+        next if !k.is_a?(String)
+        obj.send("#{k}=", uncast_data_from_column(v, k))
+      end
+
+      obj
     end
   end
 
@@ -216,7 +254,8 @@ class DBModel
       return false if !self.actual_before_create
 
       Db.execute("INSERT INTO `#{self.class.table_name}` (" <<
-        self.class.writable_columns_for(:insert).map{|a| a.to_s }.join(", ") <<
+        self.class.writable_columns_for(:insert).map{|a| "`#{a.to_s}`" }.
+          join(", ") <<
         ") VALUES (" <<
         self.class.writable_columns_for(:insert).map{|a| "?" }.join(", ") <<
         ")",
@@ -227,7 +266,7 @@ class DBModel
       self.new_record = false
     else
       Db.execute("UPDATE `#{self.class.table_name}` SET " +
-        self.class.writable_columns_for(:update).map{|a| "#{a.to_s} = ?" }.
+        self.class.writable_columns_for(:update).map{|a| "`#{a.to_s}` = ?" }.
         join(", ") <<
         " WHERE `#{self.class.primary_key}` = ?",
         self.class.writable_columns_for(:update).map{|a|
