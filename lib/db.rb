@@ -14,10 +14,19 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
+#
+# To make a db change:
+#  - modify the schema in #connect for a new install
+#  - bump DB_VERSION
+#  - add a case in #migrate_from to migrate up to that new version
+#
+
 require "sqlite3"
 
 class Db
   class << self
+    DB_VERSION = 2
+
     attr_reader :db, :db_file
 
     def connect(db_file)
@@ -93,27 +102,21 @@ class Db
         (version INTEGER)
       ")
 
-      v = @db.execute("SELECT version FROM schema_version").first
-      if !v
-        v = { "version" => 0 }
-      end
+      last_version = 0
+      while true
+        v = @db.execute("SELECT version FROM schema_version").first
+        if v
+          if v["version"] == last_version
+            raise "looping in migrations, #{last_version} didn't increment"
+          elsif v["version"] == DB_VERSION
+            break
+          end
+        else
+          v = { "version" => 0 }
+        end
 
-      case v["version"]
-      when 0
-        @db.execute("INSERT INTO schema_version (version) VALUES (1)")
-
-      when 1
-        @db.execute("
-          CREATE TABLE IF NOT EXISTS
-          folders
-          (uuid STRING PRIMARY KEY,
-          created_at DATETIME,
-          updated_at DATETIME,
-          user_uuid STRING,
-          name BLOB)
-        ")
-
-        @db.execute("UPDATE schema_version SET version = 2")
+        last_version = v["version"]
+        migrate_from(v["version"])
       end
 
       # eagerly cache column definitions
@@ -135,6 +138,31 @@ class Db
       # STDERR.puts(([ query ] + params).inspect)
 
       self.connection.execute(query, params)
+    end
+
+    def migrate_from(version)
+      STDERR.puts "migrating db from version #{version}"
+
+      case version
+      when 0
+        # we created a new db from scratch, no need to migrate to anything
+        @db.execute("INSERT INTO schema_version (version) " <<
+          "VALUES ('#{DB_VERSION}')")
+        return
+
+      when 1
+        @db.execute("
+          CREATE TABLE IF NOT EXISTS
+          folders
+          (uuid STRING PRIMARY KEY,
+          created_at DATETIME,
+          updated_at DATETIME,
+          user_uuid STRING,
+          name BLOB)
+        ")
+      end
+
+      @db.execute("UPDATE schema_version SET version = #{version + 1}")
     end
   end
 end
