@@ -111,47 +111,28 @@ class Cipher < DBModel
     self.notes = params[:notes]
 
     self.fields = nil
-    if params[:fields]
-      # we have to ucfirst each key of each field in the array
-      tfields = []
-      params[:fields].each do |f|
-        tf = {}
-        f.each do |k,v|
-          tf[k.to_s.ucfirst] = v
-        end
-        tfields.push tf
-      end
-      self.fields = tfields.to_json
+    if params[:fields] && params[:fields].is_a?(Array)
+      self.fields = params[:fields].map{|h| h.ucfirst_hash }.to_json
     end
 
     case self.type
     when TYPE_LOGIN
-      tlogin = {}
-      params[:login].each do |k,v|
-        tlogin[k.to_s.ucfirst] = v
+      tlogin = params[:login].ucfirst_hash
+
+      if tlogin["Uris"] && tlogin["Uris"].is_a?(Array)
+        tlogin["Uris"].map!{|h| h.ucfirst_hash }
       end
+
       self.login = tlogin.to_json
 
     when TYPE_NOTE
-      tnote = {}
-      params[:securenote].each do |k,v|
-        tnote[k.to_s.ucfirst] = v
-      end
-      self.securenote = tnote.to_json
+      self.securenote = params[:securenote].ucfirst_hash.to_json
 
     when TYPE_CARD
-      tcard = {}
-      params[:card].each do |k,v|
-        tcard[k.to_s.ucfirst] = v
-      end
-      self.card = tcard.to_json
+      self.card = params[:card].ucfirst_hash.to_json
 
     when TYPE_IDENTITY
-      tid = {}
-      params[:identity].each do |k,v|
-        tid[k.to_s.ucfirst] = v
-      end
-      self.identity = tid.to_json
+      self.identity = params[:identity].ucfirst_hash.to_json
     end
   end
 
