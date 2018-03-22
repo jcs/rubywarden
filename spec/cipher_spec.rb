@@ -75,7 +75,7 @@ describe "cipher module" do
     c = Cipher.find_by_uuid(uuid)
     c.wont_be_nil
     c.uuid.must_equal uuid
-    JSON.parse(c.data)["Name"].must_equal "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io="
+    c.name.must_equal "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io="
 
     # update
 
@@ -104,7 +104,7 @@ describe "cipher module" do
     last_json_response["Id"].to_s.wont_equal ""
 
     c = Cipher.find_by_uuid(last_json_response["Id"])
-    JSON.parse(c.data)["Name"].must_equal new_name
+    c.name.must_equal new_name
 
     uuid = c.uuid
 
