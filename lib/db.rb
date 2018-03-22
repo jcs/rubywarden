@@ -167,8 +167,30 @@ class Db
           user_uuid STRING,
           name BLOB)
         ")
-
       when 2
+        @db.execute("
+          CREATE TABLE IF NOT EXISTS
+          global_equivalent_domains
+          (id INTEGER PRIMARY KEY NOT NULL,
+          domains BLOB)
+        ")
+
+        @db.execute("
+          CREATE TABLE IF NOT EXISTS
+          excluded_global_equivalent_domains
+          (id INTEGER PRIAMRY KEY NOT NULL,
+          global_equivalent_domain_id INTEGER NOT NULL,
+          user_uuid STRING NOT NULL)
+        ")
+
+        @db.execute("
+          CREATE TABLE IF NOT EXISTS
+          equivalent_domains
+          (ID INTEGER PRIMARY KEY NOT NULL,
+          domains TEXT NOT NULL,
+          user_uuid STRING NOT NULL)
+        ")
+      when 3
         @db.execute("ALTER TABLE ciphers ADD name BLOB")
         @db.execute("ALTER TABLE ciphers ADD notes BLOB")
         @db.execute("ALTER TABLE ciphers ADD fields BLOB")

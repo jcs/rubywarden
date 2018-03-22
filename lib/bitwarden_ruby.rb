@@ -23,16 +23,20 @@ RACK_ENV ||= (ENV["RACK_ENV"] || "development")
 require "sinatra/base"
 require "sinatra/namespace"
 require "cgi"
+require "filesize"
 
 require "#{APP_ROOT}/lib/bitwarden.rb"
 require "#{APP_ROOT}/lib/helper.rb"
 
 require "#{APP_ROOT}/lib/db.rb"
-require "#{APP_ROOT}/lib/dbmodel.rb"
-require "#{APP_ROOT}/lib/user.rb"
-require "#{APP_ROOT}/lib/device.rb"
-require "#{APP_ROOT}/lib/cipher.rb"
-require "#{APP_ROOT}/lib/folder.rb"
+require "#{APP_ROOT}/lib/models/dbmodel.rb"
+require "#{APP_ROOT}/lib/models/user.rb"
+require "#{APP_ROOT}/lib/models/device.rb"
+require "#{APP_ROOT}/lib/models/cipher.rb"
+require "#{APP_ROOT}/lib/models/folder.rb"
+
+require "#{APP_ROOT}/lib/models/global_equivalent_domain.rb"
+require "#{APP_ROOT}/lib/models/equivalent_domain.rb"
 
 BASE_URL ||= "/api"
 IDENTITY_BASE_URL ||= "/identity"

@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby ">= 2.2.8", "< 2.5.0"
+ruby ">= 2.3.0", "< 2.5.0"
 
 gem "sinatra", "~> 2.0.1"
 gem "sinatra-contrib", "~> 2.0.1"
@@ -12,6 +12,7 @@ gem "rotp"
 gem "jwt"
 
 gem "sqlite3"
+gem "filesize"
 
 # for tools/activate_totp.rb
 gem "rqrcode"

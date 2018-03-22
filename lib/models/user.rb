@@ -53,9 +53,18 @@ class User < DBModel
     Bitwarden.encrypt(data, encKey[0, 32], encKey[32, 32])
   end
 
+  def equivalent_domains
+    @domains ||= EquivalentDomain.find_all_by_user_uuid(self.uuid).
+      each{|f| f.user = self }
+  end
+
   def folders
     @folders ||= Folder.find_all_by_user_uuid(self.uuid).
       each{|f| f.user = self }
+  end
+
+  def global_equivalent_domains
+    @global_domains ||= GlobalEquivalentDomain.active_for_user(user: self)
   end
 
   def has_password_hash?(hash)
@@ -70,13 +79,13 @@ class User < DBModel
       "Id" => self.uuid,
       "Name" => self.name,
       "Email" => self.email,
-      "EmailVerified" => self.email_verified,
+      "EmailVerified" => true,
       "Premium" => self.premium,
       "MasterPasswordHint" => self.password_hint,
       "Culture" => self.culture,
       "TwoFactorEnabled" => self.two_factor_enabled?,
       "Key" => self.key,
-      "PrivateKey" => nil,
+      "PrivateKey" => self.private_key,
       "SecurityStamp" => self.security_stamp,
       "Organizations" => [],
       "Object" => "profile"

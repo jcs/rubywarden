@@ -15,21 +15,27 @@
 #
 
 require_relative 'helpers/request_helpers'
+require_relative 'helpers/attachment_helpers'
 
 require_relative 'routes/api'
 require_relative 'routes/icons'
 require_relative 'routes/identity'
+require_relative 'routes/attachments'
+require_relative 'routes/account'
 
 module BitwardenRuby
   class App < Sinatra::Base
     register Sinatra::Namespace
 
-    set :root, File.dirname(__FILE__)
+    set :root, File.expand_path("..", File.dirname(__FILE__))
+    set :public_folder, Proc.new { File.join(root, "public") }
+
     configure do
       enable :logging
     end
 
     helpers BitwardenRuby::RequestHelpers
+    helpers BitwardenRuby::AttachmentHelpers
 
     before do
       if request.content_type.to_s.match(/\Aapplication\/json(;|\z)/)
@@ -52,5 +58,7 @@ module BitwardenRuby
     register BitwardenRuby::Routing::Api
     register BitwardenRuby::Routing::Icons
     register BitwardenRuby::Routing::Identity
+    register BitwardenRuby::Routing::Attachments
+    register BitwardenRuby::Routing::Account
   end
 end

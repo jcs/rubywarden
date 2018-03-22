@@ -13,7 +13,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-
 module BitwardenRuby
   module Routing
     module Icons
@@ -21,8 +20,8 @@ module BitwardenRuby
         app.namespace ICONS_URL do
           get "/:domain/icon.png" do
             # TODO: do this service ourselves
-
-            redirect "http://#{params[:domain]}/favicon.ico"
+            redirect url("images/fa-globe.png")
+            #redirect "http://#{params[:domain]}/favicon.ico"
           end
         end
       end

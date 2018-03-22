@@ -1,4 +1,4 @@
-require_relative "spec_helper.rb"
+require "spec_helper.rb"
 
 describe "bitwarden encryption stuff" do
   it "should make a key from a password and salt" do
