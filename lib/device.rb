@@ -15,8 +15,8 @@
 #
 
 class Device < DBModel
-  set_table_name "devices"
-  set_primary_key "uuid"
+  self.table_name = "devices"
+  #set_primary_key "uuid"
 
   attr_writer :user
 

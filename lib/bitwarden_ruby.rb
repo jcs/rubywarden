@@ -47,4 +47,4 @@ end
 Bitwarden::Token.load_keys
 
 # create/update tables
-Db.connect("#{APP_ROOT}/db/#{RACK_ENV}.sqlite3")
+Db.connect(environment: RACK_ENV)
