@@ -17,8 +17,8 @@
 require "rotp"
 
 class User < DBModel
-  set_table_name "users"
-  set_primary_key "uuid"
+  self.table_name = "users"
+  #set_primary_key "uuid"
 
   def before_save
     if self.security_stamp.blank?

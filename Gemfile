@@ -24,3 +24,10 @@ gem "rack-test"
 group :keepass, :optional => true do
   gem 'rubeepass', '~> 3.0'
 end
+
+gem "activerecord", "5.1.5"
+gem "standalone_migrations", "~> 5.2.0"
+
+group :migrate, optional: true do
+  gem 'yaml_db'
+end

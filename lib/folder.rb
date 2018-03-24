@@ -15,8 +15,8 @@
 #
 
 class Folder < DBModel
-  set_table_name "folders"
-  set_primary_key "uuid"
+  self.table_name = "folders"
+  #set_primary_key "uuid"
 
   attr_writer :user
 

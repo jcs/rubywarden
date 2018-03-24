@@ -15,8 +15,8 @@
 #
 
 class Cipher < DBModel
-  set_table_name "ciphers"
-  set_primary_key "uuid"
+  self.table_name = "ciphers"
+  #set_primary_key "uuid"
 
   attr_writer :user
 
