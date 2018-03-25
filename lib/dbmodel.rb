@@ -17,4 +17,8 @@
 class DBModel < ActiveRecord::Base
   self.inheritance_column = "inheritance_type"
   self.abstract_class = true
+protected
+  def generate_uuid_primary_key
+    self.id = SecureRandom.uuid
+  end
 end

@@ -24,25 +24,7 @@ class Sinatra::IndifferentHash
   end
 end
 
-class NilClass
-  def blank?
-    true
-  end
-
-  def present?
-    false
-  end
-end
-
 class String
-  def blank?
-    self.strip == ""
-  end
-
-  def present?
-    !blank?
-  end
-
   def timingsafe_equal_to(other)
     if self.bytesize != other.bytesize
       return false

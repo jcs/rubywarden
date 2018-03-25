@@ -18,7 +18,10 @@ class Cipher < DBModel
   self.table_name = "ciphers"
   #set_primary_key "uuid"
 
-  attr_writer :user
+  before_create :generate_uuid_primary_key
+
+  belongs_to :user, foreign_key: :user_uuid, inverse_of: :folders
+  belongs_to :folder, foreign_key: :folder_uuid, inverse_of: :ciphers, optional: true
 
   TYPE_LOGIN    = 1
   TYPE_NOTE     = 2
@@ -134,9 +137,5 @@ class Cipher < DBModel
     when TYPE_IDENTITY
       self.identity = params[:identity].ucfirst_hash.to_json
     end
-  end
-
-  def user
-    @user ||= User.find_by_uuid(self.user_uuid)
   end
 end
