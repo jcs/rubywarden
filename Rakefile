@@ -1,7 +1,12 @@
 require "rake/testtask"
+require "sinatra/activerecord/rake"
+
 Rake::TestTask.new do |t|
   t.pattern = "spec/*_spec.rb"
 end
 
-require 'standalone_migrations'
-StandaloneMigrations::Tasks.load_tasks
+namespace :db do
+  task :load_config do
+    require "./app"
+  end
+end

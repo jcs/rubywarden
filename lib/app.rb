@@ -14,6 +14,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
+require 'sinatra/activerecord'
+
 require_relative 'helpers/request_helpers'
 
 require_relative 'routes/api'
@@ -23,8 +25,11 @@ require_relative 'routes/identity'
 module BitwardenRuby
   class App < Sinatra::Base
     register Sinatra::Namespace
+    register Sinatra::ActiveRecordExtension
 
     set :root, File.dirname(__FILE__)
+    set :database_file, "../db/config.yml"
+
     configure do
       enable :logging
     end
