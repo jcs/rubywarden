@@ -20,17 +20,12 @@ class User < DBModel
   self.table_name = "users"
   #set_primary_key "uuid"
 
-  def before_save
-    if self.security_stamp.blank?
-      self.security_stamp = SecureRandom.uuid
-    end
-    true
-  end
+  before_create :generate_uuid_primary_key
+  before_validation :generate_security_stamp
 
-  def ciphers
-    @ciphers ||= Cipher.find_all_by_user_uuid(self.uuid).
-      each{|d| d.user = self }
-  end
+  has_many :ciphers, foreign_key: :user_uuid, inverse_of: :user
+  has_many :folders, foreign_key: :user_uuid, inverse_of: :user
+  has_many :devices, foreign_key: :user_uuid, inverse_of: :user
 
   def decrypt_data_with_master_password_key(data, mk)
     # self.key is random data encrypted with the key of (password,email), so
@@ -40,22 +35,12 @@ class User < DBModel
     Bitwarden.decrypt(data, encKey[0, 32], encKey[32, 32])
   end
 
-  def devices
-    @devices ||= Device.find_all_by_user_uuid(self.uuid).
-      each{|d| d.user = self }
-  end
-
   def encrypt_data_with_master_password_key(data, mk)
     # self.key is random data encrypted with the key of (password,email), so
     # create that key and decrypt the random data to get the original
     # encryption key, then use that key to encrypt the data
     encKey = Bitwarden.decrypt(self.key, mk[0, 32], mk[32, 32])
     Bitwarden.encrypt(data, encKey[0, 32], encKey[32, 32])
-  end
-
-  def folders
-    @folders ||= Folder.find_all_by_user_uuid(self.uuid).
-      each{|f| f.user = self }
   end
 
   def has_password_hash?(hash)
@@ -100,5 +85,11 @@ class User < DBModel
 
   def verifies_totp_code?(code)
     ROTP::TOTP.new(self.totp_secret).now == code.to_s
+  end
+protected
+  def generate_security_stamp
+    if self.security_stamp.blank?
+      self.security_stamp = SecureRandom.uuid
+    end
   end
 end
