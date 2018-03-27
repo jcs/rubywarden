@@ -146,6 +146,9 @@ def getEntries(db)
 
       c.data = cdata.to_json
 
+      # TODO: convert data to each field natively
+      c.migrate_data!
+
       @to_save[c.type] ||= []
       @to_save[c.type].push c
 
