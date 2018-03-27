@@ -144,9 +144,6 @@ CSV.foreach(file, headers: true) do |row|
 
   c.data = cdata.to_json
 
-  # TODO: convert data to each field natively
-  c.migrate_data!
-
   to_save[c.type] ||= []
   to_save[c.type].push c
 end
@@ -167,7 +164,9 @@ imp = 0
 Cipher.transaction do
   to_save.each_value do |v|
     v.each do |c|
-      raise "failed saving #{c.inspect}" unless c.save
+      # TODO: convert data to each field natively and call save! on our own
+      c.migrate_data!
+
       imp += 1
     end
   end

@@ -228,9 +228,6 @@ File.read(file).split("\n").each do |line|
 
   c.data = cdata.to_json
 
-  # TODO: convert data to each field natively
-  c.migrate_data!
-
   to_save[c.type] ||= []
   to_save[c.type].push c
 end
@@ -255,9 +252,8 @@ imp = 0
 Cipher.transaction do
   to_save.each do |_, v|
     v.each do |c|
-      if !c.save
-        raise "failed saving #{c.inspect}"
-      end
+      # TODO: convert data to each field natively and call save! on our own
+      c.migrate_data!
 
       imp += 1
     end
