@@ -18,10 +18,6 @@
 # To make a db change:
 #  - generate a new migration using rake db:new_migration name=YOUR_NAME
 #
-
-require "sqlite3"
-require "active_record"
-
 class Db
   def self.connect environment:
     dbconfig = YAML.load(File.read('db/config.yml'))
