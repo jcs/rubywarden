@@ -18,7 +18,7 @@ class Sinatra::IndifferentHash
   def ucfirst_hash
     out = {}
     self.each do |k,v|
-      out[k.to_s.downcase.ucfirst] = v
+      out[k.to_s.ucfirst] = v
     end
     out
   end
