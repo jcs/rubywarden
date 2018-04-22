@@ -28,6 +28,7 @@ class Cipher < DBModel
   serialize :securenote, JSON
   serialize :card, JSON
   serialize :identity, JSON
+  serialize :attachments, JSON
 
   TYPE_LOGIN    = 1
   TYPE_NOTE     = 2
