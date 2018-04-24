@@ -190,6 +190,7 @@ File.read(file).split("\n").each do |line|
   "wallet.computer.UnixServer",
   "wallet.computer.License",
   "wallet.government.SsnUS",
+  "wallet.government.Passport",
   "wallet.financial.BankAccountUS",
   "wallet.government.DriversLicense",
   "wallet.membership.Membership",
