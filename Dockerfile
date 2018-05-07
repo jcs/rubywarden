@@ -10,4 +10,4 @@ RUN bundle install
 
 COPY . .
 
-EXPOSE $PORT
+EXPOSE 4567 
