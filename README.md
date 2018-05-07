@@ -55,6 +55,18 @@ To run the test suite:
 
 	bundle exec rake test
 
+### Docker
+
+To use this with docker we first need to build from the dockerfile
+
+  docker build -t bitwarden-ruby:latest .
+
+Then we can run the docker image
+
+  docker run -p 4567:4567 bitwarden-ruby env RACK_ENV=production bundle exec rackup -p 4567 config.ru 
+
+The dockerfile only runs the ruby application and should be placed behind a reverse proxy container that can serve it via HTTPS for security.
+
 ### 1Password Conversion
 
 Export everything from 1Password in its "1Password Interchange Format".
