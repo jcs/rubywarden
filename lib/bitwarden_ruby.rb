@@ -26,6 +26,7 @@ require "active_record"
 require "sinatra/base"
 require "sinatra/namespace"
 require "cgi"
+require "filesize"
 
 require "#{APP_ROOT}/lib/bitwarden.rb"
 require "#{APP_ROOT}/lib/helper.rb"

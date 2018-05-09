@@ -27,6 +27,7 @@ end
 
 gem "activerecord", "5.1.5"
 gem "standalone_migrations", "~> 5.2.0"
+gem "filesize"
 
 group :migrate, optional: true do
   gem 'yaml_db'
