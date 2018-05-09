@@ -48,6 +48,7 @@ GEM
       fagin (~> 1.0, >= 1.0.3)
     erubi (1.7.1)
     fagin (1.1.2)
+    filesize (0.1.1)
     globalid (0.4.1)
       activesupport (>= 4.2.0)
     hilighter (1.2.2)
@@ -159,11 +160,12 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord (= 5.1.5)
+  filesize
   json
   jwt
   minitest
   pbkdf2-ruby
-  rack-test
+  rack-test (~> 0.8)
   rake
   rotp
   rqrcode
@@ -179,4 +181,4 @@ RUBY VERSION
    ruby 2.4.2p198
 
 BUNDLED WITH
-   1.16.0
+   1.16.1

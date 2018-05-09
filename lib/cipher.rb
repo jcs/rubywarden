@@ -16,6 +16,7 @@
 
 class Cipher < DBModel
   self.table_name = "ciphers"
+
   #set_primary_key "uuid"
 
   before_create :generate_uuid_primary_key
@@ -134,5 +135,17 @@ class Cipher < DBModel
     when TYPE_IDENTITY
       self.identity = params[:identity].ucfirst_hash
     end
+  end
+
+  def add_attachment attachment:
+    target = self.attachments.nil? ? [] : self.attachments
+    target << attachment
+    self.attachments = target
+  end
+
+  def remove_attachment attachment_id:
+    target = self.attachments.nil? ? [] : self.attachments
+    removed = target.reject {|attachment| attachment["Id"] == attachment_id }
+    self.attachments = removed
   end
 end
