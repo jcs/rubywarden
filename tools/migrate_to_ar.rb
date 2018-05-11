@@ -55,6 +55,31 @@ FileUtils.mv dbconfig[environment]["database"], "#{dbconfig[environment]["databa
 
 system "rake db:migrate RACK_ENV=#{environment}"
 
+# add created/updated_at timestamps if missing
+class YamlDb::SerializationHelper::Load
+  def self.load_records(table, column_names, records)
+    if column_names.nil?
+      return
+    end
+    quoted_table_name = YamlDb::SerializationHelper::Utils.quote_table(table)
+
+    if column_names.include? "created_at"
+      quoted_column_names = column_names.map { |column| ActiveRecord::Base.connection.quote_column_name(column) }.join(',')
+      records.each do |record|
+        quoted_values = record.map{|c| ActiveRecord::Base.connection.quote(c)}.join(',')
+        ActiveRecord::Base.connection.execute("INSERT INTO #{quoted_table_name} (#{quoted_column_names}) VALUES (#{quoted_values})")
+      end
+    else
+      quoted_column_names = (column_names + ["created_at", "updated_at"]).map { |column| ActiveRecord::Base.connection.quote_column_name(column) }.join(',')
+      dummy_timestamp = Time.now.to_i
+      records.each do |record|
+        quoted_values = (record + [dummy_timestamp, dummy_timestamp]).map{|c| ActiveRecord::Base.connection.quote(c)}.join(',')
+        ActiveRecord::Base.connection.execute("INSERT INTO #{quoted_table_name} (#{quoted_column_names}) VALUES (#{quoted_values})")
+      end
+    end
+  end
+end
+
 ActiveRecord::Base.establish_connection dbconfig[environment]
 YamlDb::SerializationHelper::Base.new(YamlDb::Helper).load(data_file)
 FileUtils.rm data_file
