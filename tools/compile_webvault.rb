@@ -3,12 +3,12 @@ require 'getoptlong'
 require 'json'
 
 def usage
-  puts "usage: #{$PROGRAM_NAME} -h http://localhost:4567 [-t v1.24.0]"
+  puts "usage: #{$PROGRAM_NAME} -h http://localhost:4567 [-t v1.26.0]"
   exit 1
 end
 
 host = nil
-tag = "v1.24.0"
+tag = "v1.26.0"
 begin
   GetoptLong.new(
     ['--host', '-h', GetoptLong::REQUIRED_ARGUMENT],
