@@ -15,10 +15,6 @@
 #
 
 class Cipher < DBModel
-  self.table_name = "ciphers"
-
-  #set_primary_key "uuid"
-
   before_create :generate_uuid_primary_key
 
   belongs_to :user, foreign_key: :user_uuid, inverse_of: :folders
