@@ -21,8 +21,9 @@ module BitwardenRuby
         app.namespace ICONS_URL do
           get "/:domain/icon.png" do
             # TODO: do this service ourselves
-
-            redirect "http://#{params[:domain]}/favicon.ico"
+            #redirect "http://#{params[:domain]}/favicon.ico"
+            # redirect to image from web-vault, cross-origin requests not allowed.
+            redirect url("images/fa-globe.png")
           end
         end
       end
