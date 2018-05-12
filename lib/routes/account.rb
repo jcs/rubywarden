@@ -53,6 +53,19 @@ module BitwardenRuby
             d.user.to_hash.to_json
           end
 
+          post "/accounts/profile" do
+            d = device_from_bearer
+            if !d
+              return validation_error("invalid bearer")
+            end
+            need_params(:name, :masterpasswordhint, :culture) do |p|
+              return validation_error("#{p} cannot be blank")
+            end
+            user = d.user
+            user.update name: params[:name], password_hint: params[:masterpasswordhint], culture: params[:culture]
+            user.to_hash.to_json
+          end
+
           # Used to update masterpassword
           post "/accounts/password" do
             d = device_from_bearer
@@ -91,7 +104,63 @@ module BitwardenRuby
 
           # Used to update email
           post "/accounts/email-token" do
-           validation_error("Not implemented yet")
+            return validation_error("not implemented")
+            # d = device_from_bearer
+            # if !d
+            #   return validation_error("invalid bearer")
+            # end
+
+            # need_params(:newemail, :masterpasswordhash) do |p|
+            #   return validation_error("#{p} cannot be blank")
+            # end
+
+            # if d.user.has_password_hash?(params[:masterpasswordhash])
+            #   d.user.update email: params[:newemail]
+            # else
+            #   return validation_error("Wrong password")
+            # end
+            # ""
+          end
+
+          post "/accounts/email" do
+            return validation_error("not implemented")
+            # d = device_from_bearer
+            # if !d
+            #   return validation_error("invalid bearer")
+            # end
+            # need_params(:key, :masterpasswordhash, :newmasterpasswordhash, :newemail, :token) do |p|
+            #   return validation_error("#{p} cannot be blank")
+            # end
+
+            # if !params[:key].to_s.match(/^0\..+\|.+/)
+            #   return validation_error("Invalid key")
+            # end
+
+            # begin
+            #   Bitwarden::CipherString.parse(params[:key])
+            # rescue Bitwarden::InvalidCipherString
+            #   return validation_error("Invalid key")
+            # end
+
+            # user = d.user
+            # if user.has_password_hash?(params[:masterpasswordhash])
+            #   user.key = params[:key]
+            #   user.password_hash = params[:newmasterpasswordhash]
+            #   user.email = params[:email]
+            # else
+            #   return validation_error("Wrong current password")
+            # end
+
+            # if params[:token] != "297150"
+            #   return validation_error("Invalid token")
+            # end
+
+            # User.transaction do
+            #   if !d.user.save
+            #     return validation_error("Unknown error")
+            #   end
+            # end
+            # ""
           end
 
           # Domain rules
