@@ -32,3 +32,8 @@ gem "filesize"
 group :migrate, optional: true do
   gem 'yaml_db'
 end
+
+group :development do
+  gem 'shotgun'
+  gem 'pry'
+end
