@@ -82,13 +82,20 @@ module BitwardenRuby
               return validation_error("invalid bearer")
             end
 
+            equivalent_domains = EquivalentDomain.where(user: d.user).pluck(:domains)
+
+            global_domains = GlobalEquivalentDomain.active_for_user(user: d.user).map do |dom|
+              dom.to_hash
+            end
+
             {
               "Profile" => d.user.to_hash,
+              "Collections" => [],
               "Folders" => d.user.folders.map{|f| f.to_hash },
               "Ciphers" => d.user.ciphers.map{|c| c.to_hash },
               "Domains" => {
-                "EquivalentDomains" => nil,
-                "GlobalEquivalentDomains" => [],
+                "EquivalentDomains" => equivalent_domains,
+                "GlobalEquivalentDomains" => global_domains,
                 "Object" => "domains",
               },
               "Object" => "sync",
