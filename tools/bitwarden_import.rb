@@ -164,7 +164,9 @@ imp = 0
 Cipher.transaction do
   to_save.each_value do |v|
     v.each do |c|
-      raise "failed saving #{c.inspect}" unless c.save
+      # TODO: convert data to each field natively and call save! on our own
+      c.migrate_data!
+
       imp += 1
     end
   end

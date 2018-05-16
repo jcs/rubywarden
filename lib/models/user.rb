@@ -17,15 +17,16 @@
 require "rotp"
 
 class User < DBModel
-  self.table_name = "users"
-  #set_primary_key "uuid"
-
   before_create :generate_uuid_primary_key
   before_validation :generate_security_stamp
 
   has_many :ciphers, foreign_key: :user_uuid, inverse_of: :user
   has_many :folders, foreign_key: :user_uuid, inverse_of: :user
   has_many :devices, foreign_key: :user_uuid, inverse_of: :user
+
+  def global_equivalent_domains
+    @global_domains ||= GlobalEquivalentDomain.active_for_user(user: self)
+  end
 
   def decrypt_data_with_master_password_key(data, mk)
     # self.key is random data encrypted with the key of (password,email), so
@@ -61,7 +62,7 @@ class User < DBModel
       "Culture" => self.culture,
       "TwoFactorEnabled" => self.two_factor_enabled?,
       "Key" => self.key,
-      "PrivateKey" => nil,
+      "PrivateKey" => self.private_key,
       "SecurityStamp" => self.security_stamp,
       "Organizations" => [],
       "Object" => "profile"

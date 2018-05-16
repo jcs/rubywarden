@@ -1,4 +1,4 @@
-require_relative "spec_helper.rb"
+require "spec_helper.rb"
 
 describe "icon module" do
   it "should fetch an icon" do

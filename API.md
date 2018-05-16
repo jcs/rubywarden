@@ -739,3 +739,94 @@ JSON response:
 		],
 		"Object":"domains"
 	}
+
+
+The web-vault retrieves the user profile by issuing a `GET` to `$baseURL/accounts/profile`
+
+	GET $baseURL/accounts/profile
+	Accept: application/json
+	Authorization: Bearer $access_token
+
+JSON response:
+
+	{
+		"Id": "0fbfc68d-ba11-416a-ac8a-a82600f0e601",
+		"Name": "name",
+		"Email": "nobody@example.com",
+		"EmailVerified": false,
+		"Premium": false,
+		"MasterPasswordHint": "master password hint",
+		"Culture": "en-US",
+		"TwoFactorEnabled": false,
+		"Key": "0.uRcMe+Mc2nmOet4yWx9BwA==|PGQhpYUlTUq/vBEDj1KOHVMlTIH1eecMl0j80+Zu0VRVfFa7X/MWKdVM6OM/NfSZicFEwaLWqpyBlOrBXhR+trkX/dPRnfwJD2B93hnLNGQ=",
+		"PrivateKey": "XXX - private key",
+		"SecurityStamp": "5d203c3f-bc89-499e-85c4-4431248e1196",
+		"Organizations": [ ],
+		"Object": "profile"
+	}
+
+The user profile is updated from the web-vault with a `POST` request to `$baseURL/accounts/profile`
+
+	POST $baseURL/accounts/profile
+	Content-type: application/json
+	Authorization: Bearer $access_token
+
+	{
+		"culture": "en-US"
+		"masterPasswordHint": "password Hint",
+		"name": "new name"
+	}
+
+JSON response:
+
+	{
+		"Id": "0fbfc68d-ba11-416a-ac8a-a82600f0e601",
+		"Name": "new name",
+		"Email": "nobody@example.com",
+		"EmailVerified": false,
+		"Premium": false,
+		"MasterPasswordHint": "password Hint",
+		"Culture": "en-US",
+		"TwoFactorEnabled": false,
+		"Key": "0.uRcMe+Mc2nmOet4yWx9BwA==|PGQhpYUlTUq/vBEDj1KOHVMlTIH1eecMl0j80+Zu0VRVfFa7X/MWKdVM6OM/NfSZicFEwaLWqpyBlOrBXhR+trkX/dPRnfwJD2B93hnLNGQ=",
+		"PrivateKey": "XXX - private key",
+		"SecurityStamp": "5d203c3f-bc89-499e-85c4-4431248e1196",
+		"Organizations": [ ],
+		"Object": "profile"
+	}
+
+The user email update is initiated with a `POST` to `$baseURL/accounts/email-token`. This should send a verification token to the new email address.
+
+	POST $baseURL/accounts/email-token
+	Content-type: application/json
+	Authorization: Bearer $access_token
+
+	{
+		"masterPasswordHash": "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo="
+		"newEmail": "newemail@example.com"
+	}
+
+A successful but zero-length response will be returned.
+
+Verification email:
+
+	Subject: Your Email Change
+	Body: To finalize changing your email address enter the following code in the pop-up window: 279251
+
+If the new email is already in use, a mail notifying the user about the problem will be sent.
+
+The user email update is finished with a `POST` to `$baseURL/accounts/email`
+
+	POST $baseURL/accounts/email
+	Content-type: application/json
+	Authorization: Bearer $access_token
+
+	{
+		"key": "0.uRcMe+Mc2nmOet4yWx9BwA==|PGQhpYUlTUq/vBEDj1KOHVMlTIH1eecMl0j80+Zu0VRVfFa7X/MWKdVM6OM/NfSZicFEwaLWqpyBlOrBXhR+trkX/dPRnfwJD2B93hnLNGQ=",
+		"masterPasswordHash": "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo=",
+		"newEmail": "newemail@example.com",
+		"newMasterPasswordHash": "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo=",
+		"token": "279251"
+	}
+
+A successful but zero-length response will be returned.
