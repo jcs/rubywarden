@@ -18,31 +18,14 @@ class Sinatra::IndifferentHash
   def ucfirst_hash
     out = {}
     self.each do |k,v|
-      out[k.to_s.downcase.ucfirst] = v
+      base = k.to_s
+      out[base == "ssn" ? "SSN" : base.ucfirst] = v
     end
     out
   end
 end
 
-class NilClass
-  def blank?
-    true
-  end
-
-  def present?
-    false
-  end
-end
-
 class String
-  def blank?
-    self.strip == ""
-  end
-
-  def present?
-    !blank?
-  end
-
   def timingsafe_equal_to(other)
     if self.bytesize != other.bytesize
       return false

@@ -14,19 +14,22 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-module BitwardenRuby
-  module Routing
-    module Icons
-      def self.registered(app)
-        app.namespace ICONS_URL do
-          get "/:domain/icon.png" do
-            # TODO: do this service ourselves
-            #redirect "http://#{params[:domain]}/favicon.ico"
-            # redirect to image from web-vault, cross-origin requests not allowed.
-            redirect url("images/fa-globe.png")
-          end
-        end
-      end
-    end
+class Folder < DBModel
+  before_create :generate_uuid_primary_key
+
+  belongs_to :user, foreign_key: :user_uuid, inverse_of: :folders
+  has_many :ciphers, foreign_key: :folder_uuid, inverse_of: :folder, dependent: :nullify
+
+  def to_hash
+    {
+      "Id" => self.uuid,
+      "RevisionDate" => self.updated_at.strftime("%Y-%m-%dT%H:%M:%S.000000Z"),
+      "Name" => self.name.to_s,
+      "Object" => "folder",
+    }
+  end
+
+  def update_from_params(params)
+    self.name = params[:name]
   end
 end

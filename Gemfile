@@ -19,8 +19,21 @@ gem "rqrcode"
 # for testing
 gem "rake"
 gem "minitest"
-gem "rack-test"
+gem "rack-test", "~> 0.8"
 
 group :keepass, :optional => true do
   gem 'rubeepass', '~> 3.0'
+end
+
+gem "activerecord", "5.1.5"
+gem "standalone_migrations", "~> 5.2.0"
+gem "filesize"
+
+group :migrate, optional: true do
+  gem 'yaml_db'
+end
+
+group :development do
+  gem 'shotgun'
+  gem 'pry'
 end

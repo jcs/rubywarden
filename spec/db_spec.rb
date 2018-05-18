@@ -1,4 +1,4 @@
-require_relative "spec_helper.rb"
+require "spec_helper.rb"
 
 @access_token = nil
 
@@ -18,8 +18,8 @@ describe "db module" do
 
     uuid = u.uuid
 
-    User.find_all_by_email_and_culture(u.email, "en-US").first.uuid.must_equal uuid
-    User.find_by_email_and_culture(u.email, "en-US").uuid.must_equal uuid
-    User.find_by_email_and_culture(u.email, "en-NO").must_be_nil
+    User.where(email: u.email, culture: "en-US").all.first.uuid.must_equal uuid
+    User.find_by(email: u.email, culture: "en-US").uuid.must_equal uuid
+    User.find_by(email: u.email, culture: "en-NO").must_be_nil
   end
 end

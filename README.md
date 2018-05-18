@@ -38,6 +38,10 @@ itself.
 
 Run `bundle install` at least once.
 
+In order to create the database and the required tables run:
+
+  env RACK_ENV=production bundle exec rake db:migrate
+
 To run via Rack on port 4567:
 
 	env RACK_ENV=production bundle exec rackup -p 4567 config.ru
@@ -54,6 +58,32 @@ For a local Rack instance, you can point it at `http://127.0.0.1:4567/`.
 To run the test suite:
 
 	bundle exec rake test
+
+### Migrating to ActiveRecord
+
+If you've used this library before it switched to using ActiveRecord, you need to do the following steps to migrate the data and generate the new table structures. Even though the migration script will create a backup of your database, it is probably best to create a backup yourself. You can also copy the ```db/production.sqlite3``` to your local machine and do the migration there. After a successful migration you'd have to copy the updated database file back to the production machine.
+
+First make sure you have the latest code:
+
+  git pull
+
+Afterwards you need to run bundle to add some required libraries for the migration
+
+  bundle --with migrate
+
+Now you are ready to do the migration
+
+  ruby tools/migrate_to_ar.rb -e production
+
+The -e switch allows you to select the correct database environment from db/config.yml. The migration script will:#
+
+  * dump the contents of the database to a YAML file
+  * rename the original database file to ```production.sqlite3.#{Time.now.to_i}```
+  * create the database using ActiveRecord migrations
+  * load the contents from the dump file
+  * remove the dump file
+
+Now your data is completely migrated and the library will now use ActiveRecord to handle anything database related :-)
 
 ### 1Password Conversion
 
@@ -116,7 +146,7 @@ so you can run it offline.
 
 ### Keepass Conversion
 
-In order to use the Keepass converter, you will need to install the necessary 
+In order to use the Keepass converter, you will need to install the necessary
 dependency, using `bundle install --with keepass`.
 
 There is no need to export your Keepass-database - you can use it as is.

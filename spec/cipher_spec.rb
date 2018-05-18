@@ -1,6 +1,26 @@
-require_relative "spec_helper.rb"
+require "spec_helper.rb"
 
 @access_token = nil
+
+
+def create_default_cipher
+  post_json "/api/ciphers", {
+    :type => 1,
+    :folderId => nil,
+    :organizationId => nil,
+    :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+    :notes => nil,
+    :favorite => false,
+    :login => {
+      :uri => "2.T57BwAuV8ubIn/sZPbQC+A==|EhUSSpJWSzSYOdJ/AQzfXuUXxwzcs/6C4tOXqhWAqcM=|OWV2VIqLfoWPs9DiouXGUOtTEkVeklbtJQHkQFIXkC8=",
+      :username => "2.JbFkAEZPnuMm70cdP44wtA==|fsN6nbT+udGmOWv8K4otgw==|JbtwmNQa7/48KszT2hAdxpmJ6DRPZst0EDEZx5GzesI=",
+      :password => "2.e83hIsk6IRevSr/H1lvZhg==|48KNkSCoTacopXRmIZsbWg==|CIcWgNbaIN2ix2Fx1Gar6rWQeVeboehp4bioAwngr0o=",
+      :totp => nil
+    }
+  }, {
+    "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+  }
+end
 
 describe "cipher module" do
   before do
@@ -51,22 +71,7 @@ describe "cipher module" do
   end
 
   it "should allow creating, updating, and deleting ciphers" do
-    post_json "/api/ciphers", {
-      :type => 1,
-      :folderId => nil,
-      :organizationId => nil,
-      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
-      :notes => nil,
-      :favorite => false,
-      :login => {
-        :uri => "2.T57BwAuV8ubIn/sZPbQC+A==|EhUSSpJWSzSYOdJ/AQzfXuUXxwzcs/6C4tOXqhWAqcM=|OWV2VIqLfoWPs9DiouXGUOtTEkVeklbtJQHkQFIXkC8=",
-        :username => "2.JbFkAEZPnuMm70cdP44wtA==|fsN6nbT+udGmOWv8K4otgw==|JbtwmNQa7/48KszT2hAdxpmJ6DRPZst0EDEZx5GzesI=",
-        :password => "2.e83hIsk6IRevSr/H1lvZhg==|48KNkSCoTacopXRmIZsbWg==|CIcWgNbaIN2ix2Fx1Gar6rWQeVeboehp4bioAwngr0o=",
-        :totp => nil
-      }
-    }, {
-      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
-    }
+    create_default_cipher
 
     last_response.status.must_equal 200
     uuid = last_json_response["Id"]
@@ -116,6 +121,76 @@ describe "cipher module" do
     last_response.status.must_equal 200
 
     Cipher.find_by_uuid(uuid).must_be_nil
+  end
+
+  it "should allow deleting multiple ciphers" do
+    uuids = []
+    create_default_cipher
+    uuids << last_json_response["Id"]
+
+    create_default_cipher
+    uuids << last_json_response["Id"]
+
+    post_json "/api/ciphers/delete", {
+      ids: uuids
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+    last_response.status.must_equal 200
+
+    uuids.each do |uuid|
+      Cipher.find_by_uuid(uuid).must_be_nil
+    end
+  end
+
+  it "should allow moving multiple ciphers to a folder" do
+    uuids = []
+    create_default_cipher
+
+    uuids << last_json_response["Id"]
+
+    post_json "/api/folders", {
+      :name => "2.d7MttWzJTSSKx1qXjHUxlQ==|01Ath5UqFZHk7csk5DVtkQ==|EMLoLREgCUP5Cu4HqIhcLqhiZHn+NsUDp8dAg1Xu0Io=",
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    folder_id = last_json_response["Id"]
+
+    post_json "/api/ciphers/move", {
+      ids: uuids,
+      folderId: folder_id
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.must_equal 200
+
+    uuids.each do |uuid|
+      Cipher.find_by_uuid(uuid).folder_uuid.must_equal folder_id
+    end
+  end
+
+    it "should not allow moving multiple ciphers to a bogus folder" do
+    uuids = []
+    create_default_cipher
+
+    uuids << last_json_response["Id"]
+
+    folder_id = uuids.first.reverse
+
+    post_json "/api/ciphers/move", {
+      ids: uuids,
+      folderId: folder_id
+    }, {
+      "HTTP_AUTHORIZATION" => "Bearer #{@access_token}",
+    }
+
+    last_response.status.wont_equal 200
+
+    uuids.each do |uuid|
+      Cipher.find_by_uuid(uuid).folder_uuid.must_be_nil
+    end
   end
 
   it "should not allow creating, updating, or deleting bogus ciphers" do

@@ -230,7 +230,7 @@ By default, BitWarden uses three different subdomains of `bitwarden.com`, one
 as the `$baseURL` which does most API operations, one as the `$identityURL`
 which handles logins (but not signups for some reason) and issues OAuth tokens,
 and an `$iconURL` which just fetches, caches, and serves requests for site
-icons.
+icons. It also uses `$cdnURL`, where the attachments are downloaded from.
 
 When configuring a self-hosted environment in the device apps before logging
 in, all three of these are assumed to be the same URL.
@@ -570,6 +570,92 @@ Send an empty `DELETE` request to `$baseURL/ciphers/(cipher UUID)`:
 
 A successful but zero-length response will be returned.
 
+### Deleting multiple items
+
+Send a `POST` request to `$baseURL/ciphers/delete`
+
+	POST $baseURL/ciphers/delete
+	Content-type: application/json
+	Authorization: Bearer (access_token)
+
+	{
+		"ids": ["f3562489-b320-42d3-8e98-e809a6df5b7a","81fc01f4-412b-41a9-9bd6-a3c39abf2699"]
+	}
+
+A successful but zero-length response will be returned.
+
+### Moving multiple items to a folder
+
+Send a `POST` request to `$baseURL/ciphers/move`
+
+	POST $baseURL/ciphers/move
+	Content-type: application/json
+	Authorization: Bearer (access_token)
+
+	{
+		"ids": ["f3562489-b320-42d3-8e98-e809a6df5b7a","81fc01f4-412b-41a9-9bd6-a3c39abf2699"],
+		"folderId": "fb7043c6-5a62-4054-b9d0-fb86e9a04712"
+	}
+
+A successful but zero-length response will be returned.
+
+### Adding an attachment
+
+Send a `POST` request to `$baseURL/ciphers/(cipher UUID)/attachment`
+
+It is a multipart/form-data post, with the file under the `data`-attribute the single posted entity.
+
+
+	POST $baseURL/ciphers/(cipher UUID)/attachment
+	Content-type: application/json
+	Authorization: Bearer $access_token
+	{
+		"data": {
+			"filename": "encrypted_filename"
+			"tempfile": blob
+		}
+	}
+
+The JSON response will then be the complete cipher item, but now containing an entry for the new attachment:
+
+	{
+		"FolderId"=>nil,
+		...
+		"Data"=> ...,
+		"Attachments"=>
+		[
+			{	"Id"=>"7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
+					"Url"=> "https://cdn.bitwarden.com/attachments/(cipher UUID)/7xytytjp1hc2ijy3n5y5vbbnzcukmo8b",
+					"FileName"=> "2.GOkRA8iZio1KxB+UkJpfcA==|/Mc8ACbPr9CRRQmNKPYHVg==|4BBQf8YTbPupap6qR97qMdn0NJ88GdTgDPIyBsQ46aA=",
+					"Size"=>"65",
+					"SizeName"=>"65 Bytes",
+					"Object"=>"attachment"
+				}
+			],
+		...,
+		"Object"=>"cipher"
+	}
+
+### Deleting an attachment
+
+Send an empty `DELETE` request to `$baseURL/ciphers/(cipher UUID)/attachment/(attachment id)`:
+
+	DELETE $baseURL/ciphers/(cipher UUID)/attachment/(attachment id)
+	Authorization: Bearer (access_token)
+
+A successful but zero-length response will be returned.
+
+### Downloading an attachment
+
+$cdn_url using the official server is https://cdn.bitwarden.com.
+
+Send an unauthenticated `GET` request to `$cdn_url/attachments/(cipher UUID)/(attachment id)`:
+
+	GET $cdn_url/attachments/(cipher UUID)/(attachment id)
+
+The file will be sent as a response.
+
+
 ### Folders
 
 To create a folder, `POST` to `$baseURL/folders`:
@@ -609,3 +695,138 @@ To fetch an icon for a URL, issue an unauthenticated `GET` to
 	(no authentication header)
 
 The binary response will contain the icon.
+
+### Settings
+
+Equivalent Domains are retrieved by issuing a `GET` to `$baseURL/settings/domains`
+
+	GET $baseURL/settings/domains
+	Accept: application/json
+	Authorization: Bearer $access_token
+
+
+JSON response:
+
+	{
+		"EquivalentDomains": [["amazon.de","amazon.it"]],
+		"GlobalEquivalentDomains": [
+			{"Type":2,"Domains":["ameritrade.com","tdameritrade.com"],"Excluded":false},
+			{"Type":3,"Domains":["bankofamerica.com","bofa.com","mbna.com","usecfo.com"],"Excluded":false},
+			...
+		],
+		"Object":"domains"
+	}
+
+Equivalent Domains are set by issuing a `POST` to `$baseURL/settings/domains`
+
+	POST $baseURL/settings/domains
+	Content-type: application/json
+	Authorization: Bearer $access_token
+
+	{
+		EquivalentDomains: [["amazon.de","amazon.it"]],
+		ExcludedGlobalEquivalentDomains: [2]
+	}
+
+JSON response:
+
+	{
+		"EquivalentDomains": [["amazon.de","amazon.it"]],
+		"GlobalEquivalentDomains": [
+			{"Type":2,"Domains":["ameritrade.com","tdameritrade.com"],"Excluded":true},
+			{"Type":3,"Domains":["bankofamerica.com","bofa.com","mbna.com","usecfo.com"],"Excluded":false},
+			...
+		],
+		"Object":"domains"
+	}
+
+
+The web-vault retrieves the user profile by issuing a `GET` to `$baseURL/accounts/profile`
+
+	GET $baseURL/accounts/profile
+	Accept: application/json
+	Authorization: Bearer $access_token
+
+JSON response:
+
+	{
+		"Id": "0fbfc68d-ba11-416a-ac8a-a82600f0e601",
+		"Name": "name",
+		"Email": "nobody@example.com",
+		"EmailVerified": false,
+		"Premium": false,
+		"MasterPasswordHint": "master password hint",
+		"Culture": "en-US",
+		"TwoFactorEnabled": false,
+		"Key": "0.uRcMe+Mc2nmOet4yWx9BwA==|PGQhpYUlTUq/vBEDj1KOHVMlTIH1eecMl0j80+Zu0VRVfFa7X/MWKdVM6OM/NfSZicFEwaLWqpyBlOrBXhR+trkX/dPRnfwJD2B93hnLNGQ=",
+		"PrivateKey": "XXX - private key",
+		"SecurityStamp": "5d203c3f-bc89-499e-85c4-4431248e1196",
+		"Organizations": [ ],
+		"Object": "profile"
+	}
+
+The user profile is updated from the web-vault with a `POST` request to `$baseURL/accounts/profile`
+
+	POST $baseURL/accounts/profile
+	Content-type: application/json
+	Authorization: Bearer $access_token
+
+	{
+		"culture": "en-US"
+		"masterPasswordHint": "password Hint",
+		"name": "new name"
+	}
+
+JSON response:
+
+	{
+		"Id": "0fbfc68d-ba11-416a-ac8a-a82600f0e601",
+		"Name": "new name",
+		"Email": "nobody@example.com",
+		"EmailVerified": false,
+		"Premium": false,
+		"MasterPasswordHint": "password Hint",
+		"Culture": "en-US",
+		"TwoFactorEnabled": false,
+		"Key": "0.uRcMe+Mc2nmOet4yWx9BwA==|PGQhpYUlTUq/vBEDj1KOHVMlTIH1eecMl0j80+Zu0VRVfFa7X/MWKdVM6OM/NfSZicFEwaLWqpyBlOrBXhR+trkX/dPRnfwJD2B93hnLNGQ=",
+		"PrivateKey": "XXX - private key",
+		"SecurityStamp": "5d203c3f-bc89-499e-85c4-4431248e1196",
+		"Organizations": [ ],
+		"Object": "profile"
+	}
+
+The user email update is initiated with a `POST` to `$baseURL/accounts/email-token`. This should send a verification token to the new email address.
+
+	POST $baseURL/accounts/email-token
+	Content-type: application/json
+	Authorization: Bearer $access_token
+
+	{
+		"masterPasswordHash": "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo="
+		"newEmail": "newemail@example.com"
+	}
+
+A successful but zero-length response will be returned.
+
+Verification email:
+
+	Subject: Your Email Change
+	Body: To finalize changing your email address enter the following code in the pop-up window: 279251
+
+If the new email is already in use, a mail notifying the user about the problem will be sent.
+
+The user email update is finished with a `POST` to `$baseURL/accounts/email`
+
+	POST $baseURL/accounts/email
+	Content-type: application/json
+	Authorization: Bearer $access_token
+
+	{
+		"key": "0.uRcMe+Mc2nmOet4yWx9BwA==|PGQhpYUlTUq/vBEDj1KOHVMlTIH1eecMl0j80+Zu0VRVfFa7X/MWKdVM6OM/NfSZicFEwaLWqpyBlOrBXhR+trkX/dPRnfwJD2B93hnLNGQ=",
+		"masterPasswordHash": "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo=",
+		"newEmail": "newemail@example.com",
+		"newMasterPasswordHash": "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo=",
+		"token": "279251"
+	}
+
+A successful but zero-length response will be returned.

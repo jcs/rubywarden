@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017 joshua stein <jcs@jcs.org>
+# Copyright (c) 2017-2018 joshua stein <jcs@jcs.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -14,26 +14,11 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-class Folder < DBModel
-  set_table_name "folders"
-  set_primary_key "uuid"
-
-  attr_writer :user
-
-  def to_hash
-    {
-      "Id" => self.uuid,
-      "RevisionDate" => self.updated_at.strftime("%Y-%m-%dT%H:%M:%S.000000Z"),
-      "Name" => self.name.to_s,
-      "Object" => "folder",
-    }
-  end
-
-  def update_from_params(params)
-    self.name = params[:name]
-  end
-
-  def user
-    @user ||= User.find_by_uuid(self.user_uuid)
+class DBModel < ActiveRecord::Base
+  self.inheritance_column = "inheritance_type"
+  self.abstract_class = true
+protected
+  def generate_uuid_primary_key
+    self.id = SecureRandom.uuid
   end
 end
