@@ -39,7 +39,7 @@ class DBModel
 
     # transform ruby data into sql
     def cast_data_for_column(data, col)
-      if !@columns.try(:any?)
+      if !@columns || !@columns.any?
         raise "need to fetch columns but in a query"
       end
 
@@ -62,7 +62,7 @@ class DBModel
     end
 
     def fetch_columns
-      return if @columns.try(:any?)
+      return if (@columns && @columns.any?)
 
       @columns = {}
 
@@ -145,7 +145,7 @@ class DBModel
 
     # transform database data into ruby
     def uncast_data_from_column(data, col)
-      if !@columns.try(:any?)
+      if !@columns || !@columns.any?
         raise "need to fetch columns but in a query"
       end
 

@@ -59,7 +59,8 @@ class Cipher < DBModel
 
     self.name = js.delete("Name")
     self.notes = js.delete("Notes")
-    self.fields = js.delete("Fields").try(:to_json)
+    f = js.delete("Fields")
+    self.fields = f ? f.to_json : nil
 
     if self.type == TYPE_LOGIN
       js["Uris"] = [

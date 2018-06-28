@@ -32,10 +32,6 @@ class NilClass
   def present?
     false
   end
-
-  def try(*a, &b)
-    nil
-  end
 end
 
 class String
