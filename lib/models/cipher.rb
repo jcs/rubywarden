@@ -83,7 +83,7 @@ class Cipher < DBModel
       "Type" => self.type,
       "RevisionDate" => self.updated_at.strftime("%Y-%m-%dT%H:%M:%S.000000Z"),
       "FolderId" => self.folder_uuid,
-      "Favorite" => self.favorite,
+      "Favorite" => !!self.favorite,
       "OrganizationId" => nil,
       "Attachments" => self.attachments,
       "OrganizationUseTotp" => false,
