@@ -1,5 +1,4 @@
-*(Note: This is still a work in progress.
-This project is not associated with the
+*(This project is not associated with the
 [Bitwarden](https://bitwarden.com/)
 project nor 8bit Solutions LLC.)*
 
@@ -61,7 +60,9 @@ Changing a user's master password must be done from the command line (as it
 requires interacting with the plaintext password, which the web API will never
 do).
 
-	env RACK_ENV=production bundle exec ruby tools/change_master_password.rb -u you@example.com
+```
+env RACK_ENV=production bundle exec ruby tools/change_master_password.rb -u you@example.com
+```
 
 ### 1Password Conversion
 
@@ -71,7 +72,9 @@ be careful with it).
 Once you have created your initial user account through `bitwarden-ruby`, run
 the conversion tool with your account e-mail address:
 
-	env RACK_ENV=production bundle exec ruby tools/1password_import.rb -f /path/to/data.1pif -u you@example.com
+```
+env RACK_ENV=production bundle exec ruby tools/1password_import.rb -f /path/to/data.1pif -u you@example.com
+```
 
 It will prompt you for the master password you already created, and then
 convert and import as many items as it can.
