@@ -60,7 +60,7 @@ class Bitwarden
 
     # encrypt+mac a value with a key and mac key and random iv, return a
     # CipherString of it
-    def encrypt(pt, key, macKey)
+    def encrypt(pt, key, macKey = nil)
       iv = OpenSSL::Random.random_bytes(16)
 
       cipher = OpenSSL::Cipher.new "AES-256-CBC"
@@ -70,14 +70,18 @@ class Bitwarden
       ct = cipher.update(pt)
       ct << cipher.final
 
-      mac = OpenSSL::HMAC.digest(OpenSSL::Digest.new("SHA256"), macKey,
-        iv + ct)
+      mac = nil
+      if macKey
+        mac = OpenSSL::HMAC.digest(OpenSSL::Digest.new("SHA256"), macKey,
+          iv + ct)
+      end
 
       CipherString.new(
-        CipherString::TYPE_AESCBC256_HMACSHA256_B64,
+        mac ? CipherString::TYPE_AESCBC256_HMACSHA256_B64 :
+          CipherString::TYPE_AESCBC256_B64,
         Base64.strict_encode64(iv),
         Base64.strict_encode64(ct),
-        Base64.strict_encode64(mac),
+        mac ? Base64.strict_encode64(mac) : nil,
       )
     end
 
@@ -110,7 +114,7 @@ class Bitwarden
         cmac = OpenSSL::HMAC.digest(OpenSSL::Digest.new("SHA256"),
           macKey, iv + ct)
         if !self.macsEqual(macKey, mac, cmac)
-          raise "invalid mac"
+          raise "invalid mac #{mac.inspect} != #{cmac.inspect}"
         end
 
         cipher = OpenSSL::Cipher.new "AES-256-CBC"

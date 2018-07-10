@@ -62,9 +62,6 @@ class User < DBModel
     self.password_hash.timingsafe_equal_to(hash)
   end
 
-  # TODO: password_hash=() should update security_stamp when it changes, I
-  # think
-
   def to_hash
     {
       "Id" => self.uuid,
@@ -85,6 +82,20 @@ class User < DBModel
 
   def two_factor_enabled?
     self.totp_secret.present?
+  end
+
+  def update_master_password(old_pwd, new_pwd)
+    # original random encryption key must be preserved, just re-encrypted with
+    # a new key derived from the new password
+
+    orig_key = Bitwarden.decrypt(self.key,
+      Bitwarden.makeKey(old_pwd, self.email), nil)
+
+    self.key = Bitwarden.encrypt(orig_key,
+      Bitwarden.makeKey(new_pwd, self.email)).to_s
+
+    self.password_hash = Bitwarden.hashPassword(new_pwd, self.email)
+    self.security_stamp = SecureRandom.uuid
   end
 
   def verifies_totp_code?(code)

@@ -55,6 +55,14 @@ To run the test suite:
 
 	bundle exec rake test
 
+### Changing Master Password
+
+Changing a user's master password must be done from the command line (as it
+requires interacting with the plaintext password, which the web API will never
+do).
+
+	env RACK_ENV=production bundle exec ruby tools/change_master_password.rb -u you@example.com
+
 ### 1Password Conversion
 
 Export everything from 1Password in its "1Password Interchange Format".
