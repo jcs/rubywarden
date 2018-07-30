@@ -19,7 +19,7 @@ require "pbkdf2"
 require "openssl"
 
 class Bitwarden
-  class InvalidCipherString < RuntimeError; end
+  class InvalidCipherString < StandardError; end
 
   # convenience methods for hashing/encryption/decryption that the apps do,
   # just so we can test against
@@ -144,7 +144,8 @@ class Bitwarden
 
     def self.parse(str)
       if !(m = str.to_s.match(/\A(\d)\.([^|]+)\|(.+)\z/))
-        raise InvalidCipherString "invalid CipherString: #{str.inspect}"
+        raise Bitwarden::InvalidCipherString, "invalid CipherString: " <<
+          str.inspect
       end
 
       type = m[1].to_i

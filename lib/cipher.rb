@@ -52,10 +52,10 @@ class Cipher < DBModel
 
   # migrate from older style everything-in-data to separate fields
   def migrate_data!
-    return if !self.data
+    return false if !self.data
 
     js = JSON.parse(self.data)
-    return if !js
+    return false if !js
 
     self.name = js.delete("Name")
     self.notes = js.delete("Notes")
@@ -78,6 +78,7 @@ class Cipher < DBModel
     self.send("#{fmap[self.type]}=", js)
 
     self.save || raise("failed migrating #{self.inspect}")
+    true
   end
 
   def to_hash

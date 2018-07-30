@@ -35,11 +35,11 @@ describe "User" do
     c.type = Cipher::TYPE_LOGIN
 
     cdata = {
-      "Name" => u.encrypt_data_with_master_password_key("some name", mk)
+      "Name" => u.encrypt_data_with_master_password_key("some name", mk).to_s
     }
 
     c.data = cdata.to_json
-    c.migrate_data!
+    c.migrate_data!.must_equal true
 
     c = Cipher.last
     u.decrypt_data_with_master_password_key(c.to_hash["Name"], mk).
@@ -56,10 +56,10 @@ describe "User" do
     c.type = Cipher::TYPE_LOGIN
 
     cdata = {
-      "Name" => u.encrypt_data_with_master_password_key("some name", mk)
+      "Name" => u.encrypt_data_with_master_password_key("some name", mk).to_s
     }
     c.data = cdata.to_json
-    c.migrate_data!
+    c.migrate_data!.must_equal true
 
     u.update_master_password(USER_PASSWORD, USER_PASSWORD + "2")
     u.save.must_equal true
