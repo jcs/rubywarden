@@ -14,7 +14,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-module BitwardenRuby
+module Rubywarden
   module RequestHelpers
     def device_from_bearer
       if m = request.env["HTTP_AUTHORIZATION"].to_s.match(/^Bearer (.+)/)

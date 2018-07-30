@@ -14,7 +14,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-module BitwardenRuby
+module Rubywarden
   module Routing
     module Api
       def self.registered(app)

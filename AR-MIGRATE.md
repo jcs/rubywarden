@@ -1,10 +1,11 @@
-## bitwarden-ruby
+## Rubywarden
 
-### Migrating to ActiveRecord
+### Migrating From `bitwarden-ruby` to Rubywarden and ActiveRecord
 
-If you've used this application before it switched to using ActiveRecord, you
-need to do the following steps to migrate the data and generate the new table
-structures.
+If you've used this application before it switched to using ActiveRecord
+(when it was called `bitwarden-ruby`),
+you need to do the following steps to migrate the data and generate the new
+table structures.
 
 Even though the migration script will create a backup of your database, it is
 probably best to create a backup yourself.

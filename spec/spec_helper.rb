@@ -11,7 +11,7 @@ end
 # most tests require this to be on
 ALLOW_SIGNUPS = true
 
-require File.realpath(File.dirname(__FILE__) + "/../lib/bitwarden_ruby.rb")
+require File.realpath(File.dirname(__FILE__) + "/../lib/rubywarden.rb")
 require "#{APP_ROOT}/lib/app.rb"
 
 #load 'db/schema.rb'
@@ -47,5 +47,5 @@ def json_request(verb, path, params = {}, headers = {})
 end
 
 def app
-  BitwardenRuby::App
+  Rubywarden::App
 end

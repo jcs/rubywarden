@@ -170,7 +170,7 @@ class Bitwarden
 
   class Token
     class << self
-      KEY = "#{APP_ROOT}/db/production/jwt-rsa.key"
+      KEY = "#{APP_ROOT}/db/#{RACK_ENV}/jwt-rsa.key"
 
       attr_reader :rsa
 
@@ -181,6 +181,9 @@ class Bitwarden
         else
           @rsa = OpenSSL::PKey::RSA.generate 2048
 
+          if !Dir.exists?(File.dirname(KEY))
+            Dir.mkdir(File.dirname(KEY))
+          end
           f = File.new(KEY, File::CREAT|File::TRUNC|File::RDWR, 0600)
           f.write @rsa.to_pem
           f.write @rsa.public_key.to_pem

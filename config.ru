@@ -14,7 +14,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-require File.dirname(__FILE__) + "/lib/bitwarden_ruby.rb"
+require File.dirname(__FILE__) + "/lib/rubywarden.rb"
 require "#{APP_ROOT}/lib/app.rb"
 
-run BitwardenRuby::App
+run Rubywarden::App
