@@ -15,10 +15,12 @@
 #
 
 class Device < DBModel
-  set_table_name "devices"
-  set_primary_key "uuid"
+  self.table_name = "devices"
+  #set_primary_key "uuid"
 
-  attr_writer :user
+  before_create :generate_uuid_primary_key
+
+  belongs_to :user, foreign_key: :user_uuid, inverse_of: :devices
 
   DEFAULT_TOKEN_VALIDITY = (60 * 60)
 
@@ -45,9 +47,5 @@ class Device < DBModel
       :scope => [ "api", "offline_access" ],
       :amr => [ "Application" ],
     })
-  end
-
-  def user
-    @user ||= User.find_by_uuid(self.user_uuid)
   end
 end

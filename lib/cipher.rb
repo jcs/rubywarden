@@ -15,10 +15,20 @@
 #
 
 class Cipher < DBModel
-  set_table_name "ciphers"
-  set_primary_key "uuid"
+  self.table_name = "ciphers"
+  #set_primary_key "uuid"
 
-  attr_writer :user
+  before_create :generate_uuid_primary_key
+
+  belongs_to :user, foreign_key: :user_uuid, inverse_of: :folders
+  belongs_to :folder, foreign_key: :folder_uuid, inverse_of: :ciphers, optional: true
+
+  serialize :fields, JSON
+  serialize :login, JSON
+  serialize :securenote, JSON
+  serialize :card, JSON
+  serialize :identity, JSON
+  serialize :attachments, JSON
 
   TYPE_LOGIN    = 1
   TYPE_NOTE     = 2
@@ -40,16 +50,6 @@ class Cipher < DBModel
     end
   end
 
-  # shortcut to turn any field containing json data into an object
-  def method_missing(method, *args, &block)
-    if m = method.to_s.match(/^(.+)_unjson$/)
-      j = self.send(m[1])
-      j ? JSON.parse(j) : nil
-    else
-      super
-    end
-  end
-
   # migrate from older style everything-in-data to separate fields
   def migrate_data!
     return if !self.data
@@ -59,8 +59,7 @@ class Cipher < DBModel
 
     self.name = js.delete("Name")
     self.notes = js.delete("Notes")
-    f = js.delete("Fields")
-    self.fields = f ? f.to_json : nil
+    self.fields = js.delete("Fields")
 
     if self.type == TYPE_LOGIN
       js["Uris"] = [
@@ -76,7 +75,7 @@ class Cipher < DBModel
       TYPE_CARD => "card",
       TYPE_IDENTITY => "identity",
     }
-    self.send("#{fmap[self.type]}=", js.to_json)
+    self.send("#{fmap[self.type]}=", js)
 
     self.save || raise("failed migrating #{self.inspect}")
   end
@@ -94,11 +93,11 @@ class Cipher < DBModel
       "Object" => "cipher",
       "Name" => self.name,
       "Notes" => self.notes,
-      "Fields" => self.fields_unjson,
-      "Login" => self.login_unjson,
-      "Card" => self.card_unjson,
-      "Identity" => self.identity_unjson,
-      "SecureNote" => self.securenote_unjson,
+      "Fields" => self.fields,
+      "Login" => self.login,
+      "Card" => self.card,
+      "Identity" => self.identity,
+      "SecureNote" => self.securenote,
     }
   end
 
@@ -113,7 +112,7 @@ class Cipher < DBModel
 
     self.fields = nil
     if params[:fields] && params[:fields].is_a?(Array)
-      self.fields = params[:fields].map{|h| h.ucfirst_hash }.to_json
+      self.fields = params[:fields].map{|h| h.ucfirst_hash }
     end
 
     case self.type
@@ -124,20 +123,16 @@ class Cipher < DBModel
         tlogin["Uris"].map!{|h| h.ucfirst_hash }
       end
 
-      self.login = tlogin.to_json
+      self.login = tlogin
 
     when TYPE_NOTE
-      self.securenote = params[:securenote].ucfirst_hash.to_json
+      self.securenote = params[:securenote].ucfirst_hash
 
     when TYPE_CARD
-      self.card = params[:card].ucfirst_hash.to_json
+      self.card = params[:card].ucfirst_hash
 
     when TYPE_IDENTITY
-      self.identity = params[:identity].ucfirst_hash.to_json
+      self.identity = params[:identity].ucfirst_hash
     end
-  end
-
-  def user
-    @user ||= User.find_by_uuid(self.user_uuid)
   end
 end

@@ -15,10 +15,13 @@
 #
 
 class Folder < DBModel
-  set_table_name "folders"
-  set_primary_key "uuid"
+  self.table_name = "folders"
+  #set_primary_key "uuid"
 
-  attr_writer :user
+  before_create :generate_uuid_primary_key
+
+  belongs_to :user, foreign_key: :user_uuid, inverse_of: :folders
+  has_many :ciphers, foreign_key: :folder_uuid, inverse_of: :folder
 
   def to_hash
     {
@@ -31,9 +34,5 @@ class Folder < DBModel
 
   def update_from_params(params)
     self.name = params[:name]
-  end
-
-  def user
-    @user ||= User.find_by_uuid(self.user_uuid)
   end
 end

@@ -20,6 +20,9 @@ APP_ROOT = File.realpath(File.dirname(__FILE__) + "/../")
 
 RACK_ENV ||= (ENV["RACK_ENV"] || "development")
 
+require "sqlite3"
+require "active_record"
+
 require "sinatra/base"
 require "sinatra/namespace"
 require "cgi"
@@ -46,5 +49,5 @@ end
 # create/load JWT signing keys
 Bitwarden::Token.load_keys
 
-# create/update tables
-Db.connect("#{APP_ROOT}/db/#{RACK_ENV}.sqlite3")
+# connect to db
+Db.connect(environment: RACK_ENV)
