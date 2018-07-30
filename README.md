@@ -14,8 +14,8 @@ All data is stored in a local SQLite database.
 This means you can easily run the server locally and have your data never
 leave your device, or run it on your own web server via Rack and some front-end
 HTTP server with TLS to support syncing across multiple devices.
-Backing up your data is as easy as copying the `db/production.sqlite3` file
-somewhere.
+Backing up your data is as easy as copying the `db/production/production.sqlite3`
+file somewhere.
 
 All user data in the SQLite database is stored in an encrypted format the
 [same way](https://help.bitwarden.com/crypto.html)
@@ -37,18 +37,30 @@ itself.
 
 Run `bundle install` at least once.
 
-In order to create the database and the required tables run:
+In order to create the initial environment, it is recommended to create a new,
+unprivileged user on your system dedicated to running bitwarden-ruby such as
+with `useradd`.
+This documentation will assume a user has been created named `_bitwarden`.
 
-  env RACK_ENV=production bundle exec rake db:migrate
+In order to create the initial database and the required tables run:
 
-To run via Rack on port 4567:
+	mkdir db/production
+	sudo chown _bitwarden db/production
+	sudo -u _bitwarden env RACK_ENV=production bundle exec rake db:migrate
 
-	env RACK_ENV=production bundle exec rackup -p 4567 config.ru
+If you've previously used bitwarden-ruby before July 30, 2018, when it did not
+use ActiveRecord, you should instead
+[migrate](AR-MIGRATE.md)
+your existing database.
+
+To run via Rack on port 4567, as user `_bitwarden`:
+
+	sudo -u _bitwarden env RACK_ENV=production bundle exec rackup -p 4567 config.ru
 
 You'll probably want to run it once with signups enabled, to allow yourself
 to create an account:
 
-	env RACK_ENV=production ALLOW_SIGNUPS=1 bundle exec rackup -p 4567 config.ru
+	sudo -u _bitwarden env RACK_ENV=production ALLOW_SIGNUPS=1 bundle exec rackup -p 4567 config.ru
 
 Once the server is running, the Bitwarden apps (such as the Firefox extension)
 can be configured to use your own Bitwarden server before login.
@@ -64,35 +76,7 @@ Changing a user's master password must be done from the command line (as it
 requires interacting with the plaintext password, which the web API will never
 do).
 
-```
-env RACK_ENV=production bundle exec ruby tools/change_master_password.rb -u you@example.com
-```
-
-### Migrating to ActiveRecord
-
-If you've used this library before it switched to using ActiveRecord, you need to do the following steps to migrate the data and generate the new table structures. Even though the migration script will create a backup of your database, it is probably best to create a backup yourself. You can also copy the ```db/production.sqlite3``` to your local machine and do the migration there. After a successful migration you'd have to copy the updated database file back to the production machine.
-
-First make sure you have the latest code:
-
-  git pull
-
-Afterwards you need to run bundle to add some required libraries for the migration
-
-  bundle --with migrate
-
-Now you are ready to do the migration
-
-  ruby tools/migrate_to_ar.rb -e production
-
-The -e switch allows you to select the correct database environment from db/config.yml. The migration script will:#
-
-  * dump the contents of the database to a YAML file
-  * rename the original database file to ```production.sqlite3.#{Time.now.to_i}```
-  * create the database using ActiveRecord migrations
-  * load the contents from the dump file
-  * remove the dump file
-
-Now your data is completely migrated and the library will now use ActiveRecord to handle anything database related :-)
+	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/change_master_password.rb -u you@example.com
 
 ### 1Password Conversion
 
@@ -102,9 +86,7 @@ be careful with it).
 Once you have created your initial user account through `bitwarden-ruby`, run
 the conversion tool with your account e-mail address:
 
-```
-env RACK_ENV=production bundle exec ruby tools/1password_import.rb -f /path/to/data.1pif -u you@example.com
-```
+	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/1password_import.rb -f /path/to/data.1pif -u you@example.com
 
 It will prompt you for the master password you already created, and then
 convert and import as many items as it can.
@@ -124,9 +106,7 @@ be converted.
 Once you have created your initial user account through `bitwarden-ruby`, run
 the conversion tool with your account e-mail address:
 
-```
-env RACK_ENV=production bundle exec ruby tools/lastpass_import.rb -f /path/to/data.csv -u you@example.com
-```
+	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/lastpass_import.rb -f /path/to/data.csv -u you@example.com
 
 It will prompt you for the master password you already created, and then
 convert and import as many items as it can.
@@ -145,9 +125,7 @@ simply exported as text.
 Once you have created your initial user account through `bitwarden-ruby`, run
 the conversion tool with your account e-mail address:
 
-```
-env RACK_ENV=production bundle exec ruby tools/bitwarden_import.rb -f /path/to/data.csv -u you@example.com
-```
+	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/bitwarden_import.rb -f /path/to/data.csv -u you@example.com
 
 It will prompt you for the master password you already created, and then
 convert and import as many items as it can.
@@ -165,22 +143,17 @@ There is no need to export your Keepass-database - you can use it as is.
 Once you have created your initial user account through `bitwarden-ruby`, run
 the conversion tool with your account e-mail address:
 
-```
-env RACK_ENV=production bundle exec ruby tools/keepass_import.rb -f /path/to/data.kdbx -u you@example.com
-```
+	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/keepass_import.rb -f /path/to/data.kdbx -u you@example.com
 
 If your Keepass-database is secured using a keyfile, you can pass it using the `-k` parameter:
 
-```
-env RACK_ENV=production bundle exec ruby tools/keepass_import.rb -f /path/to/data.kdbx -k /path/to/keyfile.key -u you@example.com
-```
+	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/keepass_import.rb -f /path/to/data.kdbx -k /path/to/keyfile.key -u you@example.com
 
 It will prompt you for the master password you already created, and then
 convert and import as many items as it can.
 
 This tool operates on the SQLite database directly (not through its REST API)
 so you can run it offline.
-
 
 ### 2-Factor Authentication
 
@@ -190,7 +163,7 @@ To activate Time-based One-Time Passwords (TOTP) on your account after you've
 signed up in the previous steps, run the `tools/activate_totp.rb` program on
 the server:
 
-	env RACK_ENV=production bundle exec ruby tools/activate_totp.rb -u you@example.com
+	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/activate_totp.rb -u you@example.com
 
 You'll be shown a `data:` URL that has a PNG-encoded QR code, which you must
 copy and paste into a browser, then scan with your mobile TOTP authenticator
@@ -204,7 +177,7 @@ Those devices will now prompt for a TOTP code upon future logins.
 
 ### License
 
-Copyright (c) 2017 joshua stein `<jcs@jcs.org>`
+Copyright (c) 2017-2018 joshua stein `<jcs@jcs.org>`
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above

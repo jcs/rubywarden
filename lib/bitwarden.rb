@@ -169,7 +169,7 @@ class Bitwarden
 
   class Token
     class << self
-      KEY = "#{APP_ROOT}/db/jwt-rsa.key"
+      KEY = "#{APP_ROOT}/db/production/jwt-rsa.key"
 
       attr_reader :rsa
 
