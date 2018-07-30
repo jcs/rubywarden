@@ -7,6 +7,6 @@ end
 
 namespace :db do
   task :load_config do
-    require "./app"
+    require "./lib/bitwarden_ruby.rb"
   end
 end
