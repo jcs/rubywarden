@@ -78,7 +78,32 @@ do).
 
 	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/change_master_password.rb -u you@example.com
 
-### 1Password Conversion
+### 2-Factor Authentication
+
+The Bitwarden browser extensions and mobile apps support accounts that require
+2FA, by prompting you for the current code after successfully logging in.
+To activate Time-based One-Time Passwords (TOTP) on your account after you've
+signed up in the previous steps, run the `tools/activate_totp.rb` program on
+the server:
+
+	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/activate_totp.rb -u you@example.com
+
+You'll be shown a `data:` URL that has a PNG-encoded QR code, which you must
+copy and paste into a browser, then scan with your mobile TOTP authenticator
+apps (assuming it supports scanning from the camera).
+Once scanned, the activation program will ask you to enter the current TOTP
+being shown in the app for verification, and then save the TOTP secret to your
+account in the SQLite database.
+Your `security_stamp` will be reset, forcing a new login on any devices that
+are logged into your account.
+Those devices will now prompt for a TOTP code upon future logins.
+
+### Migrating From Other Password Managers
+
+This project inclues utilities that will import data exported from other
+password managers, convert it to its own data format, and then import it.
+
+#### 1Password
 
 Export everything from 1Password in its "1Password Interchange Format".
 It should create a directory with a `data.1pif` file (which is unencrypted, so
@@ -94,27 +119,7 @@ convert and import as many items as it can.
 This tool operates on the SQLite database directly (not through its REST API)
 so you can run it offline.
 
-### Lastpass Conversion
-
-Export everything from LastPass by going to your vault, "More Options",
-"Advanced" and then "Export". It will then export your details in a new browser
-window in CSV format, copy and paste this data into a file accessible from your
-bitwarden-ruby installation. Unfortunately due to limitations in LastPass
-export the "extra fields" and "attachments" data in the LastPass vault will not
-be converted.
-
-Once you have created your initial user account through `bitwarden-ruby`, run
-the conversion tool with your account e-mail address:
-
-	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/lastpass_import.rb -f /path/to/data.csv -u you@example.com
-
-It will prompt you for the master password you already created, and then
-convert and import as many items as it can.
-
-This tool operates on the SQLite database directly (not through its REST API)
-so you can run it offline.
-
-### bitwarden Conversion
+#### Bitwarden (Official Apps)
 
 Export your bitwarden vault via the web interface or the browser plugin, which
 should prompt you to save a `bitwarden_export_<datestamp>.csv` file. Due to
@@ -133,7 +138,7 @@ convert and import as many items as it can.
 This tool operates on the SQLite database directly (not through its REST API)
 so you can run it offline.
 
-### Keepass Conversion
+### Keepass
 
 In order to use the Keepass converter, you will need to install the necessary
 dependency, using `bundle install --with keepass`.
@@ -155,25 +160,25 @@ convert and import as many items as it can.
 This tool operates on the SQLite database directly (not through its REST API)
 so you can run it offline.
 
-### 2-Factor Authentication
+#### Lastpass
 
-The Bitwarden browser extensions and mobile apps support accounts that require
-2FA, by prompting you for the current code after successfully logging in.
-To activate Time-based One-Time Passwords (TOTP) on your account after you've
-signed up in the previous steps, run the `tools/activate_totp.rb` program on
-the server:
+Export everything from LastPass by going to your vault, "More Options",
+"Advanced" and then "Export". It will then export your details in a new browser
+window in CSV format, copy and paste this data into a file accessible from your
+bitwarden-ruby installation. Unfortunately due to limitations in LastPass
+export the "extra fields" and "attachments" data in the LastPass vault will not
+be converted.
 
-	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/activate_totp.rb -u you@example.com
+Once you have created your initial user account through `bitwarden-ruby`, run
+the conversion tool with your account e-mail address:
 
-You'll be shown a `data:` URL that has a PNG-encoded QR code, which you must
-copy and paste into a browser, then scan with your mobile TOTP authenticator
-apps (assuming it supports scanning from the camera).
-Once scanned, the activation program will ask you to enter the current TOTP
-being shown in the app for verification, and then save the TOTP secret to your
-account in the SQLite database.
-Your `security_stamp` will be reset, forcing a new login on any devices that
-are logged into your account.
-Those devices will now prompt for a TOTP code upon future logins.
+	sudo -u _bitwarden env RACK_ENV=production bundle exec ruby tools/lastpass_import.rb -f /path/to/data.csv -u you@example.com
+
+It will prompt you for the master password you already created, and then
+convert and import as many items as it can.
+
+This tool operates on the SQLite database directly (not through its REST API)
+so you can run it offline.
 
 ### License
 
