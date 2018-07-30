@@ -15,6 +15,7 @@
 #
 
 require 'sinatra/activerecord'
+require 'sinatra/namespace'
 
 require_relative 'helpers/request_helpers'
 
