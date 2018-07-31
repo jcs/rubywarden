@@ -31,7 +31,7 @@ usage unless environment
 
 require 'yaml_db'
 require 'fileutils'
-require File.realpath(File.dirname(__FILE__) + "/../lib/bitwarden_ruby.rb")
+require File.realpath(File.dirname(__FILE__) + "/../lib/rubywarden.rb")
 ActiveRecord::Base.remove_connection
 
 data_file = "db/dump.yml"
