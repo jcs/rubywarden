@@ -26,7 +26,7 @@
 # bitwarden-ruby installation after creating a new account.
 #
 
-require File.realpath(File.dirname(__FILE__) + "/../lib/bitwarden_ruby.rb")
+require File.realpath(File.dirname(__FILE__) + "/../lib/rubywarden.rb")
 require "getoptlong"
 require "csv"
 

@@ -26,7 +26,7 @@
 # bitwarden-ruby installation after creating a new account.
 #
 
-require File.realpath(File.dirname(__FILE__) + "/../lib/bitwarden_ruby.rb")
+require File.realpath(File.dirname(__FILE__) + "/../lib/rubywarden.rb")
 require "getoptlong"
 require "rubeepass"
 
@@ -141,7 +141,7 @@ def getEntries(db)
       cdata['Notes'] = encrypt(entry[1].notes) if entry[1].notes.present?
 
       if entry[1].attachments.any?
-        puts "This entry has an attachment - but it won't be converted as bitwarden_ruby does not support attachments yet."
+        puts "This entry has an attachment - but it won't be converted as rubywarden does not support attachments yet."
       end
 
       c.data = cdata.to_json
