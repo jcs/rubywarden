@@ -1,11 +1,9 @@
-# Tool to migrate old. "manually managed" database to active-record + standalone_migrations
-## Necessary steps
-# 1. Create backup of old database
-# 2. Initialize new database with AR
-# 3. Migrate data from old to ar-db
-# 4. Profit!
+# see https://github.com/jcs/rubywarden/blob/master/AR-MIGRATE.md
 
-require 'getoptlong'
+require "fileutils"
+require "getoptlong"
+require "tempfile"
+require "yaml_db"
 
 def usage
   puts "usage: #{$PROGRAM_NAME} -e development"
@@ -28,36 +26,51 @@ end
 
 usage unless environment
 
-
-require 'yaml_db'
-require 'fileutils'
 require File.realpath(File.dirname(__FILE__) + "/../lib/rubywarden.rb")
+
 ActiveRecord::Base.remove_connection
 
-data_file = "db/dump.yml"
+dbconfig = YAML.load(File.read(File.realpath(__dir__ + "/../db/config.yml")))
 
-dbconfig = YAML.load(File.read('db/config.yml'))
-ActiveRecord::Base.establish_connection dbconfig[environment]
+# if a file exists at the new path, some kind of migration has already been
+# done so bail out
+newdb = dbconfig[environment]["database"]
+if File.exists?(newdb)
+  raise "a file already exists at #{newdb}, has a migration already taken place?"
+end
+
+olddb = File.realpath(__dir__ + "/../db/production.sqlite3")
+if !olddb || !File.exists?(olddb)
+  raise "no file at #{olddb} to migrate"
+end
+
+# point a temporary config at the old db path so we can dump it
+tmpconfig = dbconfig[environment].dup
+tmpconfig["database"] = olddb
+ActiveRecord::Base.establish_connection tmpconfig
 
 # select only tables for defined models
 class YamlDb::SerializationHelper::Dump
   def self.tables
-    #ActiveRecord::Base.connection.tables.reject { |table| ['schema_info', 'schema_migrations', 'schema_version'].include?(table) }.sort
-    ObjectSpace.each_object(Class).select {|k| k < DBModel}.map {|k| k.table_name }
+    ObjectSpace.each_object(Class).select{|k| k < DBModel}.map{|k| k.table_name }
   end
 end
 
-YamlDb::SerializationHelper::Base.new(YamlDb::Helper).dump(data_file)
+dump_file = Tempfile.new("rubywarden-migrate")
 
+puts "dumping old database to #{dump_file.path}"
+YamlDb::SerializationHelper::Base.new(YamlDb::Helper).dump(dump_file.path)
 ActiveRecord::Base.remove_connection
 
-FileUtils.mv dbconfig[environment]["database"], "#{dbconfig[environment]["database"]}.#{Time.now.to_i}"
+puts "creating new database at #{dbconfig[environment]["database"]}"
+system("rake", "db:migrate", "RACK_ENV=#{environment}")
 
-system "rake db:migrate RACK_ENV=#{environment}"
-
+puts "importing old database dump"
 ActiveRecord::Base.establish_connection dbconfig[environment]
-YamlDb::SerializationHelper::Base.new(YamlDb::Helper).load(data_file)
-FileUtils.rm data_file
+YamlDb::SerializationHelper::Base.new(YamlDb::Helper).load(dump_file.path)
+
+puts "deleting dump file"
+dump_file.unlink
 
 # reset created_at / updated_at from seconds since epoch to actual datetime for ar magic
 DBModel.record_timestamps = false
@@ -67,3 +80,9 @@ ObjectSpace.each_object(Class).select {|k| k < DBModel}.each do |k|
   end
 end
 DBModel.record_timestamps = true
+
+newdb = File.realpath(__dir__ + "/../" + dbconfig[environment]["database"])
+puts "you may wish to delete the old database at #{newdb}"
+
+puts "you may also wish to create a new, unprivileged user to run the"
+puts "rubywarden server and own the db/production/ directory"
