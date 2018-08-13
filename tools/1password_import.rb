@@ -129,7 +129,7 @@ File.read(file).split("\n").each do |line|
   c = Cipher.new
   c.user_uuid = @u.uuid
   c.type = Cipher::TYPE_LOGIN
-  c.favorite = (i["openContents"] && i["openContents"]["faveIndex"])
+  c.favorite = !!(i["openContents"] && i["openContents"]["faveIndex"])
 
   cdata = {
     "Name" => encrypt(i["title"].blank? ? "--" : i["title"]),
