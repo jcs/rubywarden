@@ -45,5 +45,21 @@ module Rubywarden
         "Object" => "error",
       }.to_json ]
     end
+
+    def delete_cipher app:, uuid:
+      d = device_from_bearer
+      if !d
+        halt validation_error("invalid bearer")
+      end
+
+      c = nil
+      if uuid.blank? || !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, uuid))
+        halt validation_error("invalid cipher")
+      end
+
+      FileUtils.rm_r attachment_path(id: "", uuid: c.uuid, app: app) if Dir.exist?(attachment_path(id: "", uuid: c.uuid, app: app))
+      c.destroy
+      ""
+    end # delete_cipher
   end
 end

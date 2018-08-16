@@ -136,4 +136,16 @@ class Cipher < DBModel
       self.identity = params[:identity].ucfirst_hash
     end
   end
+
+  def add_attachment attachment:
+    target = self.attachments.nil? ? [] : self.attachments
+    target << attachment
+    self.attachments = target
+  end
+
+  def remove_attachment attachment_id:
+    target = self.attachments.nil? ? [] : self.attachments
+    removed = target.reject {|attachment| attachment["Id"] == attachment_id }
+    self.attachments = removed
+  end
 end

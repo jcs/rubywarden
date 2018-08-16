@@ -3,11 +3,6 @@ ENV["RACK_ENV"] = "test"
 require "minitest/autorun"
 require "rack/test"
 
-# clear out test db
-if File.exist?(f = File.dirname(__FILE__) + "/../db/test.sqlite3")
-  File.unlink(f)
-end
-
 # most tests require this to be on
 ALLOW_SIGNUPS = true
 
