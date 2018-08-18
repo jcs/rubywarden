@@ -1,4 +1,6 @@
 require "rake/testtask"
+
+# rake db:create_migration NAME=...
 require "sinatra/activerecord/rake"
 
 Rake::TestTask.new do |t|

@@ -76,7 +76,7 @@ if !@u.has_password_hash?(Bitwarden.hashPassword(password, username))
   raise "master password does not match stored hash"
 end
 
-@master_key = Bitwarden.makeKey(password, @u.email)
+@master_key = Bitwarden.makeKey(password, @u.email, @u.kdf_iterations)
 
 @u.folders.each do |folder|
   folder_name = @u.decrypt_data_with_master_password_key(folder.name, @master_key)

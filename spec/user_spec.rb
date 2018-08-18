@@ -9,9 +9,12 @@ describe "User" do
 
     u = User.new
     u.email = USER_EMAIL
-    u.password_hash = Bitwarden.hashPassword(USER_PASSWORD, USER_EMAIL)
+    u.kdf_iterations = User::DEFAULT_KDF_ITERATIONS
+    u.password_hash = Bitwarden.hashPassword(USER_PASSWORD, USER_EMAIL,
+      u.kdf_iterations)
     u.password_hint = "it's like password but not"
-    u.key = Bitwarden.makeEncKey(Bitwarden.makeKey(USER_PASSWORD, USER_EMAIL))
+    u.key = Bitwarden.makeEncKey(Bitwarden.makeKey(USER_PASSWORD, USER_EMAIL,
+      u.kdf_iterations))
     u.save
   end
 
@@ -19,16 +22,19 @@ describe "User" do
     u = User.find_by_email(USER_EMAIL)
     u.email.must_equal USER_EMAIL
     u.has_password_hash?(
-      Bitwarden.hashPassword(USER_PASSWORD, USER_EMAIL)).must_equal true
+      Bitwarden.hashPassword(USER_PASSWORD, USER_EMAIL,
+      User::DEFAULT_KDF_ITERATIONS)).must_equal true
 
     u.has_password_hash?(
-      Bitwarden.hashPassword(USER_PASSWORD, USER_EMAIL + "2")).wont_equal true
+      Bitwarden.hashPassword(USER_PASSWORD, USER_EMAIL + "2",
+      User::DEFAULT_KDF_ITERATIONS)).wont_equal true
   end
 
   it "encrypts and decrypts user's ciphers" do
     u = User.find_by_email(USER_EMAIL)
 
-    mk = Bitwarden.makeKey(USER_PASSWORD, USER_EMAIL)
+    mk = Bitwarden.makeKey(USER_PASSWORD, USER_EMAIL,
+      User::DEFAULT_KDF_ITERATIONS)
 
     c = Cipher.new
     c.user_uuid = u.uuid
@@ -49,7 +55,8 @@ describe "User" do
   it "supports changing a master password" do
     u = User.find_by_email(USER_EMAIL)
 
-    mk = Bitwarden.makeKey(USER_PASSWORD, USER_EMAIL)
+    mk = Bitwarden.makeKey(USER_PASSWORD, USER_EMAIL,
+      User::DEFAULT_KDF_ITERATIONS)
 
     c = Cipher.new
     c.user_uuid = u.uuid
@@ -67,7 +74,8 @@ describe "User" do
     post "/identity/connect/token", {
       :grant_type => "password",
       :username => USER_EMAIL,
-      :password => Bitwarden.hashPassword(USER_PASSWORD + "2", USER_EMAIL),
+      :password => Bitwarden.hashPassword(USER_PASSWORD + "2", USER_EMAIL,
+        User::DEFAULT_KDF_ITERATIONS),
       :scope => "api offline_access",
       :client_id => "browser",
       :deviceType => 3,
@@ -77,7 +85,8 @@ describe "User" do
     }
     last_response.status.must_equal 200
 
-    mk = Bitwarden.makeKey(USER_PASSWORD + "2", USER_EMAIL)
+    mk = Bitwarden.makeKey(USER_PASSWORD + "2", USER_EMAIL,
+      User::DEFAULT_KDF_ITERATIONS)
 
     c = Cipher.find_by_uuid(c.uuid)
     u.decrypt_data_with_master_password_key(c.to_hash["Name"], mk).

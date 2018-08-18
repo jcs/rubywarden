@@ -4,20 +4,20 @@ describe "bitwarden encryption stuff" do
   it "should make a key from a password and salt" do
     b64 = "2K4YP5Om9r5NpA7FCS4vQX5t+IC4hKYdTJN/C20cz9c="
 
-    k = Bitwarden.makeKey("this is a password", "nobody@example.com")
+    k = Bitwarden.makeKey("this is a password", "nobody@example.com", 5000)
     Base64.strict_encode64(k).encode("utf-8").must_equal b64
 
     # make sure key and salt affect it
-    k = Bitwarden.makeKey("this is a password", "nobody2@example.com")
+    k = Bitwarden.makeKey("this is a password", "nobody2@example.com", 5000)
     Base64.strict_encode64(k).encode("utf-8").wont_equal b64
 
-    k = Bitwarden.makeKey("this is A password", "nobody@example.com")
+    k = Bitwarden.makeKey("this is A password", "nobody@example.com", 5000)
     Base64.strict_encode64(k).encode("utf-8").wont_equal b64
   end
 
   it "should make a cipher string from a key" do
     cs = Bitwarden.makeEncKey(
-      Bitwarden.makeKey("this is a password", "nobody@example.com")
+      Bitwarden.makeKey("this is a password", "nobody@example.com", 5000)
     )
 
     cs.must_match(/^0\.[^|]+|[^|]+$/)
@@ -25,7 +25,7 @@ describe "bitwarden encryption stuff" do
 
   it "should hash a password" do
     #def hashedPassword(password, salt)
-    Bitwarden.hashPassword("secret password", "user@example.com").
+    Bitwarden.hashPassword("secret password", "user@example.com", 5000).
       must_equal "VRlYxg0x41v40mvDNHljqpHcqlIFwQSzegeq+POW1ww="
   end
 
@@ -46,14 +46,14 @@ describe "bitwarden encryption stuff" do
   end
 
   it "should encrypt and decrypt properly" do
-    ik = Bitwarden.makeKey("password", "user@example.com")
+    ik = Bitwarden.makeKey("password", "user@example.com", 5000)
     ek = Bitwarden.makeEncKey(ik)
     k = Bitwarden.decrypt(ek, ik, nil)
     j = Bitwarden.encrypt("hi there", k[0, 32], k[32, 32])
 
     cs = Bitwarden::CipherString.parse(j)
 
-    ik = Bitwarden.makeKey("password", "user@example.com")
+    ik = Bitwarden.makeKey("password", "user@example.com", 5000)
     Bitwarden.decrypt(cs.to_s, k[0, 32], k[32, 32]).must_equal "hi there"
   end
 

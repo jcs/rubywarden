@@ -25,9 +25,10 @@ class Bitwarden
   # just so we can test against
   class << self
     # pbkdf2 stretch a password+salt
-    def makeKey(password, salt)
+    def makeKey(password, salt, kdf_iterations)
       PBKDF2.new(:password => password, :salt => salt,
-        :iterations => 5000, :hash_function => OpenSSL::Digest::SHA256,
+        :iterations => kdf_iterations,
+        :hash_function => OpenSSL::Digest::SHA256,
         :key_length => (256 / 8)).bin_string
     end
 
@@ -51,8 +52,8 @@ class Bitwarden
     end
 
     # base64-encode a wrapped, stretched password+salt for signup/login
-    def hashPassword(password, salt)
-      key = makeKey(password, salt)
+    def hashPassword(password, salt, kdf_iterations)
+      key = makeKey(password, salt, kdf_iterations)
       Base64.strict_encode64(PBKDF2.new(:password => key, :salt => password,
         :iterations => 1, :key_length => 256/8,
         :hash_function => OpenSSL::Digest::SHA256).bin_string)

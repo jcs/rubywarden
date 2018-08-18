@@ -7,17 +7,22 @@ describe "cipher module" do
     post "/api/accounts/register", {
       :name => nil,
       :email => "api@example.com",
-      :masterPasswordHash => Bitwarden.hashPassword("asdf", "api@example.com"),
+      :masterPasswordHash => Bitwarden.hashPassword("asdf", "api@example.com",
+        User::DEFAULT_KDF_ITERATIONS),
       :masterPasswordHint => nil,
       :key => Bitwarden.makeEncKey(
-        Bitwarden.makeKey("adsf", "api@example.com")
+        Bitwarden.makeKey("adsf", "api@example.com",
+        User::DEFAULT_KDF_ITERATIONS)
       ),
+      :kdf => 0,
+      :kdfIterations => User::DEFAULT_KDF_ITERATIONS,
     }
 
     post "/identity/connect/token", {
       :grant_type => "password",
       :username => "api@example.com",
-      :password => Bitwarden.hashPassword("asdf", "api@example.com"),
+      :password => Bitwarden.hashPassword("asdf", "api@example.com",
+        User::DEFAULT_KDF_ITERATIONS),
       :scope => "api offline_access",
       :client_id => "browser",
       :deviceType => 3,
@@ -79,7 +84,7 @@ describe "cipher module" do
 
     # update
 
-    ik = Bitwarden.makeKey("asdf", "api@example.com")
+    ik = Bitwarden.makeKey("asdf", "api@example.com", User::DEFAULT_KDF_ITERATIONS)
     k = Bitwarden.makeEncKey(ik)
     new_name = Bitwarden.encrypt("some new name", k[0, 32], k[32, 32]).to_s
 

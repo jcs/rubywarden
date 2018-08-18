@@ -19,6 +19,23 @@ module Rubywarden
     module Api
       def self.registered(app)
         app.namespace BASE_URL do
+          post "/accounts/prelogin" do
+            need_params(:email) do |p|
+              return validation_error("#{p} cannot be blank")
+            end
+
+            iterations = User::DEFAULT_KDF_ITERATIONS
+
+            if u = User.find_by_email(params[:email])
+              iterations = u.kdf_iterations
+            end
+
+            {
+              "Kdf" => 0,
+              "KdfIterations" => iterations,
+            }.to_json
+          end
+
           # create a new user
           post "/accounts/register" do
             content_type :json
@@ -27,7 +44,7 @@ module Rubywarden
               return validation_error("Signups are not permitted")
             end
 
-            need_params(:masterpasswordhash) do |p|
+            need_params(:masterpasswordhash, :kdfiterations) do |p|
               return validation_error("#{p} cannot be blank")
             end
 
@@ -57,6 +74,7 @@ module Rubywarden
               u.password_hash = params[:masterpasswordhash]
               u.password_hint = params[:masterpasswordhint]
               u.key = params[:key]
+              u.kdf_iterations = params[:kdfiterations]
 
               # is this supposed to come from somewhere?
               u.culture = "en-US"

@@ -8,10 +8,11 @@ describe "db module" do
 
     u = User.new
     u.email = "#{rand}@#{rand}.com"
-    u.password_hash = Bitwarden.hashPassword("blah", u.email)
+    u.password_hash = Bitwarden.hashPassword("blah", u.email,
+      User::DEFAULT_KDF_ITERATIONS)
     u.password_hint = nil
     u.key = Bitwarden.makeEncKey(
-      Bitwarden.makeKey("blah", u.email),
+      Bitwarden.makeKey("blah", u.email, User::DEFAULT_KDF_ITERATIONS),
     )
     u.culture = "en-US"
     u.save.must_equal true

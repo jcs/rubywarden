@@ -21,9 +21,9 @@ code.
 
 Overview:
 
-- PBKDF2 with 5000 rounds stretches the user's master password with a salt
-  of the user's e-mail address to become the master key (unknown to the
-  server).
+- PBKDF2 with `$KdfIterations` rounds stretches the user's master password
+  with a salt of the user's e-mail address to become the master key (unknown
+  to the server).
 - 64 random bytes are generated to become the symmetric key, the first half
   of which becomes the encryption key and the second half becomes the MAC key.
 - The master key and a random 16-byte IV are used to encrypt the symmetric
@@ -47,15 +47,16 @@ User enters a `$masterPassword` of `p4ssw0rd` and an `$email` of
 `nobody@example.com`.
 
 PBKDF2 is used with a password of `$masterPassword`, salt of lowercased
-`$email`, and 5000 iterations to stretch password into `$masterKey`.
+`$email`, and `$iterations` KDF iterations to stretch password into
+`$masterKey`.
 
-	def makeKey(password, salt)
+	def makeKey(password, salt, iterations)
 	  PBKDF2.new(:password => password, :salt => salt,
-	    :iterations => 5000, :hash_function => OpenSSL::Digest::SHA256,
+	    :iterations => iterations, :hash_function => OpenSSL::Digest::SHA256,
 	    :key_length => (256 / 8)).bin_string
 	end
 
-	irb> $masterKey = makeKey("p4ssw0rd", "nobody@example.com".downcase)
+	irb> $masterKey = makeKey("p4ssw0rd", "nobody@example.com".downcase, 5000)
 	=> "\x13\x88j`\x99m\xE3FA\x94\xEE'\xF0\xB2\x1A!\xB6>\\)\xF4\xD5\xCA#\xE5\e\xA6f5o{\xAA"
 
 A random, 64-byte key `$symmetricKey` is created to become the symmetric key.
@@ -104,14 +105,14 @@ This hash is created with 1 round of PBKDF2 over a password of
 `$email`)) and salt of `$masterPassword`.
 
 	# base64-encode a wrapped, stretched password+salt for signup/login
-	def hashedPassword(password, salt)
-	  key = makeKey(password, salt)
+	def hashedPassword(password, salt, kdf_iterations)
+	  key = makeKey(password, salt, kdf_iterations)
 	  Base64.strict_encode64(PBKDF2.new(:password => key, :salt => password,
 	    :iterations => 1, :key_length => 256/8,
 	    :hash_function => OpenSSL::Digest::SHA256).bin_string)
 	end
 
-	irb> $masterPasswordHash = hashedPassword("p4ssw0rd", "nobody@example.com")
+	irb> $masterPasswordHash = hashedPassword("p4ssw0rd", "nobody@example.com", 5000)
 	=> "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo="
 
 Upon future logins with the user's plain-text `$masterPassword` and `$email`,
@@ -240,10 +241,10 @@ in, all three of these are assumed to be the same URL.
 Collect an e-mail address and master password, calculate `$internalKey`,
 `$masterPasswordHash`, and the `$key` CipherString from the two values:
 
-	irb> $internalKey = makeKey("p4ssw0rd", "nobody@example.com".downcase)
+	irb> $internalKey = makeKey("p4ssw0rd", "nobody@example.com".downcase, 5000)
 	=> "\x13\x88j`\x99m\xE3FA\x94\xEE'\xF0\xB2\x1A!\xB6>\\)\xF4\xD5\xCA#\xE5\e\xA6f5o{\xAA"
 
-	irb> $masterPasswordHash = hashedPassword("p4ssw0rd", "nobody@example.com")
+	irb> $masterPasswordHash = hashedPassword("p4ssw0rd", "nobody@example.com", 5000)
 	=> "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo="
 
 	irb> $key = makeEncKey($internalKey)
@@ -253,7 +254,8 @@ Securely erase `$masterPassword` from memory, as it is no longer needed until
 the next login.
 
 Issue a `POST` to `$baseURL/accounts/register` with a JSON body containing the
-e-mail address, `$masterPasswordHash`, and `$key` (_not $internalKey_!):
+e-mail address, `$masterPasswordHash`, KDF iteration count `$kdfIterations`,
+and `$key` (_not $internalKey_!):
 
 	POST $baseURL/accounts/register
 	Content-type: application/json
@@ -264,19 +266,39 @@ e-mail address, `$masterPasswordHash`, and `$key` (_not $internalKey_!):
 		"masterPasswordHash": "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo=",
 		"masterPasswordHint": null,
 		"key": "0.uRcMe+Mc2nmOet4yWx9BwA==|PGQhpYUlTUq/vBEDj1KOHVMlTIH1eecMl0j80+Zu0VRVfFa7X/MWKdVM6OM/NfSZicFEwaLWqpyBlOrBXhR+trkX/dPRnfwJD2B93hnLNGQ=",
+		"kdf": 0,
+		"kdfIterations": 5000,
 	}
 
 The response should be a `200` with a zero-byte body.
 
 ### Login
 
-Collect an e-mail address and master password, and calculate
-`$internalKey` and `$masterPasswordHash` from the two values:
+Collect an e-mail address and master password, and issue a `POST` to
+`$baseURL/accounts/prelogin` to determine the KDF iterations for the given
+e-mail address:
 
-	irb> $internalKey = makeKey("p4ssw0rd", "nobody@example.com".downcase)
+	POST $baseURL/accounts/prelogin
+	Content-type: application/json
+
+	{
+		"email": "nobody@example.com",
+	}
+
+The `prelogin` response will contain the KDF iteration count:
+
+	{
+		"Kdf": 0,
+		"KdfIterations": 5000,
+	}
+
+With the KDF iteration count known, calculate `$internalKey` and
+`$masterPasswordHash` from the three values:
+
+	irb> $internalKey = makeKey("p4ssw0rd", "nobody@example.com".downcase, 5000)
 	=> "\x13\x88j`\x99m\xE3FA\x94\xEE'\xF0\xB2\x1A!\xB6>\\)\xF4\xD5\xCA#\xE5\e\xA6f5o{\xAA"
 
-	irb> $masterPasswordHash = hashedPassword("p4ssw0rd", "nobody@example.com")
+	irb> $masterPasswordHash = hashedPassword("p4ssw0rd", "nobody@example.com", 5000)
 	=> "r5CFRR+n9NQI8a525FY+0BPR0HGOjVJX0cR1KEMnIOo="
 
 Securely erase the master password from memory, as it is no longer needed

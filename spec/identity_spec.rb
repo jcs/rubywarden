@@ -6,11 +6,14 @@ describe "identity module" do
       :name => nil,
       :email => "nobody@example.com",
       :masterPasswordHash => Bitwarden.hashPassword("asdf",
-        "nobody@example.com"),
+        "nobody@example.com", User::DEFAULT_KDF_ITERATIONS),
       :masterPasswordHint => nil,
       :key => Bitwarden.makeEncKey(
-        Bitwarden.makeKey("adsf", "nobody@example.com")
+        Bitwarden.makeKey("adsf", "nobody@example.com",
+        User::DEFAULT_KDF_ITERATIONS)
       ),
+      :kdf => 0,
+      :kdfIterations => User::DEFAULT_KDF_ITERATIONS
     }
     last_response.status.must_equal 200
   end
@@ -21,11 +24,14 @@ describe "identity module" do
         :name => nil,
         :email => "nobody2@example.com",
         :masterPasswordHash => Bitwarden.hashPassword("asdf",
-          "nobody2@example.com"),
+          "nobody2@example.com", User::DEFAULT_KDF_ITERATIONS),
         :masterPasswordHint => nil,
         :key => Bitwarden.makeEncKey(
-          Bitwarden.makeKey("adsf", "nobody2@example.com")
+          Bitwarden.makeKey("adsf", "nobody2@example.com",
+          User::DEFAULT_KDF_ITERATIONS)
         ),
+        :kdf => 0,
+        :kdfIterations => User::DEFAULT_KDF_ITERATIONS,
       }
       if x == 0
         last_response.status.must_equal 200
@@ -42,8 +48,11 @@ describe "identity module" do
       :masterPasswordHash => "",
       :masterPasswordHint => nil,
       :key => Bitwarden.makeEncKey(
-        Bitwarden.makeKey("adsf", "nobody3@example.com")
+        Bitwarden.makeKey("adsf", "nobody3@example.com",
+        User::DEFAULT_KDF_ITERATIONS)
       ),
+      :kdf => 0,
+      :kdfIterations => User::DEFAULT_KDF_ITERATIONS,
     }
     last_response.status.wont_equal 200
 
@@ -51,9 +60,11 @@ describe "identity module" do
       :name => nil,
       :email => "nobody3@example.com",
       :masterPasswordHash => Bitwarden.hashPassword("asdf",
-        "nobody3@example.com"),
+        "nobody3@example.com", User::DEFAULT_KDF_ITERATIONS),
       :masterPasswordHint => nil,
       :key => "junk",
+      :kdf => 0,
+      :kdfIterations => User::DEFAULT_KDF_ITERATIONS,
     }
     last_response.status.wont_equal 200
   end
@@ -63,11 +74,14 @@ describe "identity module" do
       :name => nil,
       :email => "nobody4@example.com",
       :masterPasswordHash => Bitwarden.hashPassword("asdf",
-        "nobody4@example.com"),
+        "nobody4@example.com", User::DEFAULT_KDF_ITERATIONS),
       :masterPasswordHint => nil,
       :key => Bitwarden.makeEncKey(
-        Bitwarden.makeKey("adsf", "nobody4@example.com")
+        Bitwarden.makeKey("adsf", "nobody4@example.com",
+        User::DEFAULT_KDF_ITERATIONS)
       ),
+      :kdf => 0,
+      :kdfIterations => User::DEFAULT_KDF_ITERATIONS,
     }
     last_response.status.must_equal 200
 
@@ -78,7 +92,8 @@ describe "identity module" do
     post "/identity/connect/token", {
       :grant_type => "password",
       :username => "nobody4@example.com",
-      :password => Bitwarden.hashPassword("asdf", "nobody4@example.com"),
+      :password => Bitwarden.hashPassword("asdf", "nobody4@example.com",
+        User::DEFAULT_KDF_ITERATIONS),
       :scope => "api offline_access",
       :client_id => "browser",
       :deviceType => 3,
@@ -101,18 +116,22 @@ describe "identity module" do
       :name => nil,
       :email => "nobody5@example.com",
       :masterPasswordHash => Bitwarden.hashPassword("asdf",
-        "nobody5@example.com"),
+        "nobody5@example.com", User::DEFAULT_KDF_ITERATIONS),
       :masterPasswordHint => nil,
       :key => Bitwarden.makeEncKey(
-        Bitwarden.makeKey("adsf", "nobody5@example.com")
+        Bitwarden.makeKey("adsf", "nobody5@example.com",
+        User::DEFAULT_KDF_ITERATIONS)
       ),
+      :kdf => 0,
+      :kdfIterations => User::DEFAULT_KDF_ITERATIONS,
     }
     last_response.status.must_equal 200
 
     post "/identity/connect/token", {
       :grant_type => "password",
       :username => "nobody5@example.com",
-      :password => Bitwarden.hashPassword("asdf", "nobody5@example.com"),
+      :password => Bitwarden.hashPassword("asdf", "nobody5@example.com",
+        User::DEFAULT_KDF_ITERATIONS),
       :scope => "api offline_access",
       :client_id => "browser",
       :deviceType => 3,
