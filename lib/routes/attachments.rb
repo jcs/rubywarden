@@ -37,7 +37,7 @@ module Rubywarden
             file = params[:data][:tempfile]
             attachment_params = { filename: filename,
                                   size: file.size,
-                                  file: file }
+                                  file: file.read }
             attachment = cipher.attachments.build_from_params(attachment_params, self)
 
             Attachment.transaction do
