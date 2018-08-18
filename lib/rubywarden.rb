@@ -36,6 +36,7 @@ require "#{APP_ROOT}/lib/user.rb"
 require "#{APP_ROOT}/lib/device.rb"
 require "#{APP_ROOT}/lib/cipher.rb"
 require "#{APP_ROOT}/lib/folder.rb"
+require "#{APP_ROOT}/lib/attachment.rb"
 
 BASE_URL ||= "/api"
 IDENTITY_BASE_URL ||= "/identity"

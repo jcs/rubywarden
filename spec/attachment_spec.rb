@@ -72,8 +72,6 @@ describe "attachment module" do
       "HTTP_AUTHORIZATION" => "Bearer #{@access_token}"
     }
     last_response.status.must_equal 200
-    Dir.glob("tmp/spec/data/attachments/#{@cipher_uuid}/*").wont_be_empty
-
     attachment = last_json_response["Attachments"].first
 
     # downloading
@@ -102,6 +100,6 @@ describe "attachment module" do
     }
 
     Cipher.find_by_uuid(@cipher_uuid).must_be_nil
-    Dir.exist?("tmp/spec/data/attachments/#{@cipher_uuid}").wont_equal true
+    Attachment.where(cipher_uuid: @cipher_uuid).must_be_empty
   end
 end
