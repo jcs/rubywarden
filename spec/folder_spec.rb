@@ -4,24 +4,32 @@ require_relative "spec_helper.rb"
 
 describe "folder module" do
   before do
+    User.all.delete_all
+
     post "/api/accounts/register", {
       :name => nil,
       :email => "api@example.com",
       :masterPasswordHash => Bitwarden.hashPassword("asdf", "api@example.com",
-        User::DEFAULT_KDF_ITERATIONS),
+        User::DEFAULT_KDF_TYPE,
+        Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE]),
       :masterPasswordHint => nil,
       :key => Bitwarden.makeEncKey(
-        Bitwarden.makeKey("adsf", "api@example.com", User::DEFAULT_KDF_ITERATIONS),
+        Bitwarden.makeKey("adsf", "api@example.com", User::DEFAULT_KDF_TYPE,
+        Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE]),
       ),
-      :kdf => 0,
-      :kdfIterations => User::DEFAULT_KDF_ITERATIONS,
+      :kdf => Bitwarden::KDF::TYPE_IDS[User::DEFAULT_KDF_TYPE],
+      :kdfIterations => Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE],
     }
+    if last_response.status != 200
+      raise last_response.inspect
+    end
 
     post "/identity/connect/token", {
       :grant_type => "password",
       :username => "api@example.com",
       :password => Bitwarden.hashPassword("asdf", "api@example.com",
-        User::DEFAULT_KDF_ITERATIONS),
+        User::DEFAULT_KDF_TYPE,
+        Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE]),
       :scope => "api offline_access",
       :client_id => "browser",
       :deviceType => 3,
@@ -29,6 +37,9 @@ describe "folder module" do
       :deviceName => "firefox",
       :devicePushToken => ""
     }
+    if last_response.status != 200
+      raise last_response.inspect
+    end
 
     @access_token = last_json_response["access_token"]
   end
@@ -61,7 +72,9 @@ describe "folder module" do
 
     # update
 
-    ik = Bitwarden.makeKey("asdf", "api@example.com", User::DEFAULT_KDF_ITERATIONS)
+    ik = Bitwarden.makeKey("asdf", "api@example.com",
+      User::DEFAULT_KDF_TYPE,
+      Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE])
     k = Bitwarden.makeEncKey(ik)
     new_name = Bitwarden.encrypt("some new name", k[0, 32], k[32, 32]).to_s
 

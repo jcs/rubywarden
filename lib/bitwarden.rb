@@ -20,16 +20,41 @@ require "openssl"
 
 class Bitwarden
   class InvalidCipherString < StandardError; end
+  class Bitwarden::KDF
+    PBKDF2 = 0
+
+    TYPES = {
+      0 => PBKDF2,
+    }
+    TYPE_IDS = TYPES.invert
+
+    DEFAULT_ITERATIONS = {
+      PBKDF2 => 5000,
+    }
+
+    ITERATION_RANGES = {
+      PBKDF2 => 5000 .. 1_000_000,
+    }
+  end
 
   # convenience methods for hashing/encryption/decryption that the apps do,
   # just so we can test against
   class << self
-    # pbkdf2 stretch a password+salt
-    def makeKey(password, salt, kdf_iterations)
-      PBKDF2.new(:password => password, :salt => salt,
-        :iterations => kdf_iterations,
-        :hash_function => OpenSSL::Digest::SHA256,
-        :key_length => (256 / 8)).bin_string
+    # stretch a password+salt
+    def makeKey(password, salt, kdf_type, kdf_iterations)
+      case kdf_type
+      when Bitwarden::KDF::PBKDF2
+        if !(r = Bitwarden::KDF::ITERATION_RANGES[kdf_type]).include?(kdf_iterations)
+          raise "PBKDF2 iterations must be between #{r}"
+        end
+
+        PBKDF2.new(:password => password, :salt => salt,
+          :iterations => kdf_iterations,
+          :hash_function => OpenSSL::Digest::SHA256,
+          :key_length => (256 / 8)).bin_string
+      else
+        raise "unknown kdf type #{kdf_type.inspect}"
+      end
     end
 
     # encrypt random bytes with a key to make new encryption key
@@ -52,11 +77,18 @@ class Bitwarden
     end
 
     # base64-encode a wrapped, stretched password+salt for signup/login
-    def hashPassword(password, salt, kdf_iterations)
-      key = makeKey(password, salt, kdf_iterations)
-      Base64.strict_encode64(PBKDF2.new(:password => key, :salt => password,
-        :iterations => 1, :key_length => 256/8,
-        :hash_function => OpenSSL::Digest::SHA256).bin_string)
+    def hashPassword(password, salt, kdf_type, kdf_iterations)
+      key = makeKey(password, salt, kdf_type, kdf_iterations)
+
+      case kdf_type
+      when Bitwarden::KDF::PBKDF2
+        # stretching has already been done in makeKey, only do 1 iteration here
+        Base64.strict_encode64(PBKDF2.new(:password => key, :salt => password,
+          :iterations => 1, :key_length => 256/8,
+          :hash_function => OpenSSL::Digest::SHA256).bin_string)
+      else
+        raise "unknown kdf type #{kdf_type.inspect}"
+      end
     end
 
     # encrypt+mac a value with a key and mac key and random iv, return a

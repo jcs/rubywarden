@@ -21,6 +21,7 @@
 class Db
   def self.connect environment:
     dbconfig = YAML.load(File.read('db/config.yml'))
+    ActiveRecord::Base.dump_schema_after_migration = false
     ActiveRecord::Base.establish_connection dbconfig[environment]
   end
 end

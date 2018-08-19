@@ -20,7 +20,7 @@ class User < DBModel
   self.table_name = "users"
   #set_primary_key "uuid"
 
-  DEFAULT_KDF_ITERATIONS = 5000
+  DEFAULT_KDF_TYPE = Bitwarden::KDF::PBKDF2
 
   before_create :generate_uuid_primary_key
   before_validation :generate_security_stamp
@@ -76,13 +76,15 @@ class User < DBModel
     # a new key derived from the new password
 
     orig_key = Bitwarden.decrypt(self.key,
-      Bitwarden.makeKey(old_pwd, self.email, self.kdf_iterations), nil)
+      Bitwarden.makeKey(old_pwd, self.email,
+      Bitwarden::KDF::TYPES[self.kdf_type], self.kdf_iterations), nil)
 
     self.key = Bitwarden.encrypt(orig_key,
-      Bitwarden.makeKey(new_pwd, self.email, self.kdf_iterations)).to_s
+      Bitwarden.makeKey(new_pwd, self.email,
+      Bitwarden::KDF::TYPES[self.kdf_type], self.kdf_iterations)).to_s
 
     self.password_hash = Bitwarden.hashPassword(new_pwd, self.email,
-      self.kdf_iterations)
+      self.kdf_type, self.kdf_iterations)
     self.security_stamp = SecureRandom.uuid
   end
 

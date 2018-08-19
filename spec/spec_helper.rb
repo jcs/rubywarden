@@ -14,12 +14,14 @@ ALLOW_SIGNUPS = true
 require File.realpath(File.dirname(__FILE__) + "/../lib/rubywarden.rb")
 require "#{APP_ROOT}/lib/app.rb"
 
-#load 'db/schema.rb'
 ActiveRecord::Migrator.up "db/migrate"
 
-include Rack::Test::Methods
+# in case migrations changed what we're testing
+[ User, Cipher, Device, Folder ].each do |c|
+  c.send(:reset_column_information)
+end
 
-#ActiveRecord::Migration.maintain_test_schema!
+include Rack::Test::Methods
 
 def last_json_response
   JSON.parse(last_response.body)
