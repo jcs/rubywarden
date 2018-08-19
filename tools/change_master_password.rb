@@ -54,7 +54,8 @@ password = STDIN.gets.chomp
 system("stty echo")
 print "\n"
 
-if !@u.has_password_hash?(Bitwarden.hashPassword(password, username))
+unless @u.has_password_hash?(Bitwarden.hashPassword(password, @u.email,
+Bitwarden::KDF::TYPES[@u.kdf_type], @u.kdf_iterations))
   raise "master password does not match stored hash"
 end
 

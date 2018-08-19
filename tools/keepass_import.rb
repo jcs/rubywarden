@@ -77,11 +77,13 @@ password = STDIN.gets.chomp
 system("stty echo")
 print "\n"
 
-if !@u.has_password_hash?(Bitwarden.hashPassword(password, username))
+unless @u.has_password_hash?(Bitwarden.hashPassword(password, @u.email,
+Bitwarden::KDF::TYPES[@u.kdf_type], @u.kdf_iterations))
   raise "master password does not match stored hash"
 end
 
-@master_key = Bitwarden.makeKey(password, @u.email, @u.kdf_iterations)
+@master_key = Bitwarden.makeKey(password, @u.email,
+  Bitwarden::KDF::TYPES[@u.kdf_type], @u.kdf_iterations)
 
 @u.folders.each do |folder|
   folder_name = @u.decrypt_data_with_master_password_key(folder.name, @master_key)
