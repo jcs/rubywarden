@@ -91,7 +91,7 @@ end
 end
 
 def encrypt(str)
-  @u.encrypt_data_with_master_password_key(str, @master_key)
+  @u.encrypt_data_with_master_password_key(str, @master_key).to_s
 end
 
 def get_or_create_folder_uuid(str)
