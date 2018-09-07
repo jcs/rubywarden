@@ -79,7 +79,7 @@ end
   Bitwarden::KDF::TYPES[@u.kdf_type], @u.kdf_iterations)
 
 def encrypt(str)
-  @u.encrypt_data_with_master_password_key(str, @master_key)
+  @u.encrypt_data_with_master_password_key(str, @master_key).to_s
 end
 
 to_save = {}
