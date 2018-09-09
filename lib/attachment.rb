@@ -24,7 +24,9 @@ class Attachment < DBModel
   belongs_to :cipher, foreign_key: :cipher_uuid, inverse_of: :attachments
 
   def self.build_from_params(params, context)
-    attachment = new params
+    attachment = new filename: params[:filename],
+                     size: params[:size],
+                     file: params[:file]
     attachment.context = context
     attachment
   end
