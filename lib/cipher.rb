@@ -22,13 +22,13 @@ class Cipher < DBModel
 
   belongs_to :user, foreign_key: :user_uuid, inverse_of: :folders
   belongs_to :folder, foreign_key: :folder_uuid, inverse_of: :ciphers, optional: true
+  has_many :attachments, foreign_key: :cipher_uuid, dependent: :destroy
 
   serialize :fields, JSON
   serialize :login, JSON
   serialize :securenote, JSON
   serialize :card, JSON
   serialize :identity, JSON
-  serialize :attachments, JSON
 
   TYPE_LOGIN    = 1
   TYPE_NOTE     = 2
@@ -89,7 +89,7 @@ class Cipher < DBModel
       "FolderId" => self.folder_uuid,
       "Favorite" => self.favorite,
       "OrganizationId" => nil,
-      "Attachments" => self.attachments,
+      "Attachments" => self.attachments.map(&:to_hash),
       "OrganizationUseTotp" => false,
       "Object" => "cipher",
       "Name" => self.name,

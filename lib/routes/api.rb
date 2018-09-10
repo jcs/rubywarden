@@ -209,20 +209,7 @@ module Rubywarden
 
           # delete a cipher
           delete "/ciphers/:uuid" do
-            d = device_from_bearer
-            if !d
-              return validation_error("invalid bearer")
-            end
-
-            c = nil
-            if params[:uuid].blank? ||
-            !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, params[:uuid]))
-              return validation_error("invalid cipher")
-            end
-
-            c.destroy
-
-            ""
+            delete_cipher app: app, uuid: params[:uuid]
           end
 
           #

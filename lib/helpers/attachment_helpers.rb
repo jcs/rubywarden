@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017 joshua stein <jcs@jcs.org>
+# Copyright (c) 2018 joshua stein <jcs@jcs.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -15,38 +15,8 @@
 #
 
 module Rubywarden
-  module RequestHelpers
-    def device_from_bearer
-      if m = request.env["HTTP_AUTHORIZATION"].to_s.match(/^Bearer (.+)/)
-        token = m[1]
-        if (d = Device.find_by_access_token(token))
-          if d.token_expires_at >= Time.now
-            return d
-          end
-        end
-      end
-
-      nil
-    end
-
-    def need_params(*ps)
-      ps.each do |p|
-        if params[p].to_s.blank?
-          yield(p)
-        end
-      end
-    end
-
-    def validation_error(msg)
-      [ 400, {
-        "ValidationErrors" => { "" => [
-          msg,
-        ]},
-        "Object" => "error",
-      }.to_json ]
-    end
-
-    def delete_cipher app:, uuid:
+  module AttachmentHelpers
+    def retrieve_cipher(uuid: )
       d = device_from_bearer
       if !d
         halt validation_error("invalid bearer")
@@ -56,8 +26,13 @@ module Rubywarden
       if uuid.blank? || !(c = Cipher.find_by_user_uuid_and_uuid(d.user_uuid, uuid))
         halt validation_error("invalid cipher")
       end
-      c.destroy
+      return c
+    end
+
+    def delete_attachment uuid:, attachment_uuid:
+      cipher = retrieve_cipher uuid: uuid
+      cipher.attachments.find(attachment_uuid).destroy
       ""
-    end # delete_cipher
+    end
   end
 end
