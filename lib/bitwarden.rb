@@ -17,6 +17,7 @@
 require "jwt"
 require "pbkdf2"
 require "openssl"
+require "yaml"
 
 class Bitwarden
   class InvalidCipherString < StandardError; end
@@ -203,7 +204,8 @@ class Bitwarden
 
   class Token
     class << self
-      KEY = "#{APP_ROOT}/db/#{RACK_ENV}/jwt-rsa.key"
+      dbconfig = YAML.load(File.read('db/config.yml'))
+      KEY = dbconfig[RACK_ENV]['key'] || "#{APP_ROOT}/db/#{RACK_ENV}/jwt-rsa.key"
 
       attr_reader :rsa
 
