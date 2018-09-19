@@ -63,7 +63,7 @@ YamlDb::SerializationHelper::Base.new(YamlDb::Helper).dump(dump_file.path)
 ActiveRecord::Base.remove_connection
 
 puts "creating new database at #{dbconfig[environment]["database"]}"
-system("rake", "db:migrate", "RACK_ENV=#{environment}")
+system("rake", "db:migrate", "RUBYWARDEN_ENV=#{environment}")
 
 puts "importing old database dump"
 ActiveRecord::Base.establish_connection dbconfig[environment]

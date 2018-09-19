@@ -18,7 +18,7 @@ Encoding.default_internal = Encoding.default_external = Encoding::UTF_8
 
 APP_ROOT = File.realpath(File.dirname(__FILE__) + "/../")
 
-RACK_ENV ||= (ENV["RACK_ENV"] || "development")
+RUBYWARDEN_ENV ||= (ENV["RUBYWARDEN_ENV"] || ENV["RACK_ENV"] || "development")
 
 require "sqlite3"
 require "active_record"
@@ -51,4 +51,4 @@ end
 Bitwarden::Token.load_keys
 
 # connect to db
-Db.connect(environment: RACK_ENV)
+Db.connect(environment: RUBYWARDEN_ENV)

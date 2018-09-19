@@ -1,4 +1,4 @@
-ENV["RACK_ENV"] = "test"
+ENV["RUBYWARDEN_ENV"] = "test"
 
 require "minitest/autorun"
 require "rack/test"
