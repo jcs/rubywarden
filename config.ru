@@ -14,6 +14,11 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
+if ENV["RUBYWARDEN_ENV"] == "production"
+  # prevent printing stack traces and other nonsense
+  ENV["RACK_ENV"] = "deployment"
+end
+
 require File.dirname(__FILE__) + "/lib/rubywarden.rb"
 require "#{APP_ROOT}/lib/app.rb"
 
