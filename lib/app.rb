@@ -31,7 +31,6 @@ module Rubywarden
     register Sinatra::ActiveRecordExtension
 
     set :root, File.dirname(__FILE__)
-    set :database_file, "../db/config.yml"
 
     configure do
       enable :logging
