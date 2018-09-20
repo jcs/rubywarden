@@ -3,9 +3,8 @@
 ### Migrating From `bitwarden-ruby` to Rubywarden and ActiveRecord
 
 If you've used this application before it switched to using ActiveRecord
-(when it was called `bitwarden-ruby`),
-you need to do the following steps to migrate the data and generate the new
-table structures.
+(when it was called `bitwarden-ruby`), you need to do the following steps to
+migrate the data and generate the new table structures.
 
 Even though the migration script will import to a new database file at a
 different path, it is probably best to create a backup yourself.
@@ -18,7 +17,11 @@ First make sure you have the latest code:
 
 	git pull
 
-Afterwards you need to run bundle to add some required libraries for the migration
+Then checkout to a specific revision where the migration was made:
+
+	git checkout 40044728d
+
+Run `bundle` to add some required libraries for the migration:
 
 	bundle --with migrate
 
@@ -43,6 +46,14 @@ path, and the library will now use ActiveRecord to handle anything database
 related.
 
 It is recommended to follow the
-[initial installation instructions](https://github.com/jcs/rubywarden#usage)
+[initial installation instructions](https://github.com/jcs/rubywarden#manual-setup)
 to create a new, unprivileged user to own the new `db/production/` database
 and run the server.
+
+Lastly, update to the current code:
+
+	git checkout master
+
+And then follow the
+[update instructions](https://github.com/jcs/rubywarden#updating)
+to bring your database up to date with the latest migrations.
