@@ -54,11 +54,6 @@ In order to create the initial database and the required tables run:
 	sudo chown _rubywarden db/production
 	sudo -u _rubywarden env RUBYWARDEN_ENV=production bundle exec rake db:migrate
 
-If you've previously used Rubywarden before July 30, 2018 when it was called
-`bitwarden-ruby`, when it did not use ActiveRecord, you should instead
-[migrate](AR-MIGRATE.md)
-your existing database.
-
 To run via Rack on port 4567, as user `_rubywarden`:
 
 	sudo -u _rubywarden env RUBYWARDEN_ENV=production bundle exec rackup -p 4567 config.ru
@@ -75,6 +70,25 @@ For a local Rack instance, you can point it at `http://127.0.0.1:4567/`.
 To run the test suite:
 
 	bundle exec rake test
+
+### Updating
+
+If you've previously used Rubywarden before July 30, 2018 when it was called
+`bitwarden-ruby`, when it did not use ActiveRecord, you should instead
+[migrate](AR-MIGRATE.md)
+your existing database.
+
+To update your instance of Rubywarden, fetch the latest code:
+
+	cd /path/to/your/rubywarden
+	git pull --ff-only
+
+Run any database migrations:
+
+	sudo -u _rubywarden env BITWARDEN_ENV=production bundle exec rake db:migrate
+
+Restart your Rubywarden instance (via Rack, Unicorn, or however you have
+deployed it).
 
 ### Changing Master Password
 
