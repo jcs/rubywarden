@@ -33,7 +33,13 @@ documentation available other than the
 [.NET Bitwarden code](https://github.com/bitwarden/core)
 itself.
 
-### Usage
+### Deployment
+
+Automated deployment of Rubywarden is possible with 3rd party support:
+
+- [Ansible playbook](https://github.com/qbit/openbsd-rubywarden) for OpenBSD
+
+### Manual Setup
 
 Run `bundle install` at least once.
 
