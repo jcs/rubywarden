@@ -85,7 +85,7 @@ To update your instance of Rubywarden, fetch the latest code:
 
 Run any database migrations:
 
-	sudo -u _rubywarden env BITWARDEN_ENV=production bundle exec rake db:migrate
+	sudo -u _rubywarden env RUBYWARDEN_ENV=production bundle exec rake db:migrate
 
 Restart your Rubywarden instance (via Rack, Unicorn, or however you have
 deployed it).
