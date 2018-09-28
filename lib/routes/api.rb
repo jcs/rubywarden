@@ -54,10 +54,6 @@ module Rubywarden
               return validation_error("Invalid e-mail address")
             end
 
-            if !params[:key].to_s.match(/^0\..+\|.+/)
-              return validation_error("Invalid key")
-            end
-
             kdf_type = Bitwarden::KDF::TYPES[params[:kdf].to_i]
             if !kdf_type
               return validation_error("invalid kdf type")
