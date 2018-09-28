@@ -25,7 +25,7 @@ gem "minitest"
 gem "rack-test"
 
 group :keepass, :optional => true do
-  gem 'rubeepass', '~> 3.0'
+  gem 'rubeepass', '~> 3.3'
 end
 
 group :migrate, optional: true do
