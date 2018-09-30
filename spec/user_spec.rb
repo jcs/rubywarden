@@ -51,7 +51,7 @@ describe "User" do
     c.data = cdata.to_json
     c.migrate_data!.must_equal true
 
-    c = Cipher.last
+    c = Cipher.where(:uuid => c.uuid).first
     u.decrypt_data_with_master_password_key(c.to_hash["Name"], mk).
       must_equal "some name"
   end
