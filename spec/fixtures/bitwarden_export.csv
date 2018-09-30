@@ -1,0 +1,4 @@
+folder,favorite,type,name,notes,fields,login_uri,login_username,login_password,login_totp
+My neato folder,,login,A login in a folder,This is a note on the item in a folder,,https://something.example.net/,user@example.org,a password,
+,,note,a secure note,"This is a secure note, the contents of which are secret.","A custom field, perhaps: And its value",,,,
+,,login,example website,,,https://login.example.com/,user@example.com,p4ssw0rd,

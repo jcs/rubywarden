@@ -2,6 +2,7 @@ ENV["RUBYWARDEN_ENV"] = "test"
 
 require "minitest/autorun"
 require "rack/test"
+require "open3"
 
 # most tests require this to be on
 ALLOW_SIGNUPS = true
@@ -50,4 +51,24 @@ end
 
 def app
   Rubywarden::App
+end
+
+def run_command_and_send_password(cmd, password)
+  Open3.popen3(*cmd) do |i,o,e,t|
+    i.puts password
+    i.close_write
+
+    files = [ e ]
+    while files.any?
+      if ready = IO.select([ e ])
+        ready[0].each do |f|
+          begin
+            puts "STDERR: #{f.read_nonblock(1024).inspect}"
+          rescue EOFError => e
+            files.delete f
+          end
+        end
+      end
+    end
+  end
 end
