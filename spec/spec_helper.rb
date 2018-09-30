@@ -9,6 +9,11 @@ ALLOW_SIGNUPS = true
 require File.realpath(File.dirname(__FILE__) + "/../lib/rubywarden.rb")
 require "#{APP_ROOT}/lib/app.rb"
 
+if File.exist?(_f = ActiveRecord::Base.connection_config[:database])
+  File.unlink(_f)
+end
+
+ActiveRecord::Migration.verbose = false
 ActiveRecord::Migrator.up "db/migrate"
 
 # in case migrations changed what we're testing
