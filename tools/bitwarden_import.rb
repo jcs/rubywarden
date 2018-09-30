@@ -79,9 +79,9 @@ usage unless file && username
 raise "can't find existing User record for #{username.inspect}" unless @u
 
 print "master password for #{@u.email}: "
-system('stty -echo')
+system('stty -echo') if STDIN.tty?
 password = STDIN.gets.chomp
-system('stty echo')
+system('stty echo') if STDIN.tty?
 puts
 
 unless @u.has_password_hash?(Bitwarden.hashPassword(password, @u.email,

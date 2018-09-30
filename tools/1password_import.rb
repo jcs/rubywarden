@@ -65,9 +65,9 @@ if !@u
 end
 
 print "master password for #{@u.email}: "
-system("stty -echo")
+system("stty -echo") if STDIN.tty?
 password = STDIN.gets.chomp
-system("stty echo")
+system("stty echo") if STDIN.tty?
 print "\n"
 
 unless @u.has_password_hash?(Bitwarden.hashPassword(password, @u.email,
