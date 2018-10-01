@@ -146,6 +146,17 @@ def getEntries(db)
         puts "This entry has an attachment - but it won't be converted as rubywarden does not support attachments yet."
       end
 
+      if entry[1].additional_attributes.any?
+        cdata['Fields'] = []
+        entry[1].additional_attributes.each_pair do |k, v|
+          cdata['Fields'].push(
+            'Type' => 0, # 0 = text, 1 = hidden, 2 = boolean
+            'Name' => encrypt(k),
+            'Value' => encrypt(v)
+          )
+        end
+      end
+
       c.data = cdata.to_json
 
       @to_save[c.type] ||= []
