@@ -33,16 +33,16 @@ class User < DBModel
     # self.key is random data encrypted with the key of (password,email), so
     # create that key and decrypt the random data to get the original
     # encryption key, then use that key to decrypt the data
-    encKey = Bitwarden.decrypt(self.key, mk[0, 32], mk[32, 32])
-    Bitwarden.decrypt(data, encKey[0, 32], encKey[32, 32])
+    encKey = Bitwarden.decrypt(self.key, mk)
+    Bitwarden.decrypt(data, encKey)
   end
 
   def encrypt_data_with_master_password_key(data, mk)
     # self.key is random data encrypted with the key of (password,email), so
     # create that key and decrypt the random data to get the original
     # encryption key, then use that key to encrypt the data
-    encKey = Bitwarden.decrypt(self.key, mk[0, 32], mk[32, 32])
-    Bitwarden.encrypt(data, encKey[0, 32], encKey[32, 32])
+    encKey = Bitwarden.decrypt(self.key, mk)
+    Bitwarden.encrypt(data, encKey)
   end
 
   def has_password_hash?(hash)
@@ -77,7 +77,7 @@ class User < DBModel
 
     orig_key = Bitwarden.decrypt(self.key,
       Bitwarden.makeKey(old_pwd, self.email,
-      Bitwarden::KDF::TYPES[self.kdf_type], self.kdf_iterations), nil)
+      Bitwarden::KDF::TYPES[self.kdf_type], self.kdf_iterations))
 
     self.key = Bitwarden.encrypt(orig_key,
       Bitwarden.makeKey(new_pwd, self.email,
@@ -91,6 +91,7 @@ class User < DBModel
   def verifies_totp_code?(code)
     ROTP::TOTP.new(self.totp_secret).now == code.to_s
   end
+
 protected
   def generate_security_stamp
     if self.security_stamp.blank?

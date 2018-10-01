@@ -75,8 +75,7 @@ describe "folder module" do
     ik = Bitwarden.makeKey("asdf", "api@example.com",
       User::DEFAULT_KDF_TYPE,
       Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE])
-    k = Bitwarden.makeEncKey(ik)
-    new_name = Bitwarden.encrypt("some new name", k[0, 32], k[32, 32]).to_s
+    new_name = Bitwarden.encrypt("some new name", ik).to_s
 
     put_json "/api/folders/#{uuid}", {
       :name => new_name,

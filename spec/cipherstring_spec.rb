@@ -19,16 +19,20 @@ describe "bitwarden encryption stuff" do
   end
 
   it "should make a cipher string from a key" do
-    cs = Bitwarden.makeEncKey(
-      Bitwarden.makeKey("this is a password", "nobody@example.com",
-        Bitwarden::KDF::PBKDF2, 5000)
-    )
+    cs = Bitwarden.makeEncKey(Bitwarden.makeKey("this is a password",
+      "nobody@example.com", Bitwarden::KDF::PBKDF2, 5000),
+      Bitwarden::CipherString::TYPE_AESCBC256_B64)
 
     cs.must_match(/^0\.[^|]+|[^|]+$/)
+
+    cs = Bitwarden.makeEncKey(Bitwarden.makeKey("this is a password",
+      "nobody@example.com", Bitwarden::KDF::PBKDF2, 5000),
+      Bitwarden::CipherString::TYPE_AESCBC256_HMACSHA256_B64)
+
+    cs.must_match(/^2\.[^|]+|[^|]+$/)
   end
 
   it "should hash a password" do
-    #def hashedPassword(password, salt)
     Bitwarden.hashPassword("secret password", "user@example.com",
       Bitwarden::KDF::PBKDF2, 5000).must_equal "VRlYxg0x41v40mvDNHljqpHcqlIFwQSzegeq+POW1ww="
   end
@@ -44,23 +48,22 @@ describe "bitwarden encryption stuff" do
     cs.mac.must_be_nil
   end
 
-  it "should parse a type-3 cipher string" do
+  it "should parse a type-2 cipher string" do
     cs = Bitwarden::CipherString.parse("2.ftF0nH3fGtuqVckLZuHGjg==|u0VRhH24uUlVlTZd/uD1lA==|XhBhBGe7or/bXzJRFWLUkFYqauUgxksCrRzNmJyigfw=")
     cs.type.must_equal 2
   end
 
   it "should encrypt and decrypt properly" do
-    ik = Bitwarden.makeKey("password", "user@example.com",
+    mk = Bitwarden.makeKey("password", "user@example.com",
       Bitwarden::KDF::PBKDF2, 5000)
-    ek = Bitwarden.makeEncKey(ik)
-    k = Bitwarden.decrypt(ek, ik, nil)
-    j = Bitwarden.encrypt("hi there", k[0, 32], k[32, 32])
+    ek = Bitwarden.makeEncKey(mk)
+    k = Bitwarden.decrypt(ek, mk)
+    j = Bitwarden.encrypt("hi there", k)
 
-    cs = Bitwarden::CipherString.parse(j)
-
-    ik = Bitwarden.makeKey("password", "user@example.com",
+    mk = Bitwarden.makeKey("password", "user@example.com",
       Bitwarden::KDF::PBKDF2, 5000)
-    Bitwarden.decrypt(cs.to_s, k[0, 32], k[32, 32]).must_equal "hi there"
+    k = Bitwarden.decrypt(ek, mk)
+    Bitwarden.decrypt(j, k).must_equal "hi there"
   end
 
   it "should test mac equality" do

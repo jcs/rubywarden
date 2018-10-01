@@ -51,29 +51,17 @@ class Bitwarden
         PBKDF2.new(:password => password, :salt => salt,
           :iterations => kdf_iterations,
           :hash_function => OpenSSL::Digest::SHA256,
-          :key_length => (256 / 8)).bin_string
+          :key_length => 32).bin_string
       else
         raise "unknown kdf type #{kdf_type.inspect}"
       end
     end
 
-    # encrypt random bytes with a key to make new encryption key
-    def makeEncKey(key)
+    # encrypt random bytes with a key from makeKey to make a new encryption
+    # CipherString
+    def makeEncKey(key, algo = CipherString::TYPE_AESCBC256_HMACSHA256_B64)
       pt = OpenSSL::Random.random_bytes(64)
-      iv = OpenSSL::Random.random_bytes(16)
-
-      cipher = OpenSSL::Cipher.new "AES-256-CBC"
-      cipher.encrypt
-      cipher.key = key
-      cipher.iv = iv
-      ct = cipher.update(pt)
-      ct << cipher.final
-
-      CipherString.new(
-        CipherString::TYPE_AESCBC256_B64,
-        Base64.strict_encode64(iv),
-        Base64.strict_encode64(ct),
-      ).to_s
+      encrypt(pt, key, algo).to_s
     end
 
     # base64-encode a wrapped, stretched password+salt for signup/login
@@ -93,7 +81,32 @@ class Bitwarden
 
     # encrypt+mac a value with a key and mac key and random iv, return a
     # CipherString of it
-    def encrypt(pt, key, macKey = nil)
+    def encrypt(pt, key, algo = CipherString::TYPE_AESCBC256_HMACSHA256_B64)
+      mac = nil
+      macKey = nil
+
+      case algo
+      when CipherString::TYPE_AESCBC256_B64
+        if key.bytesize != 32
+          raise "unhandled key size #{key.bytesize}"
+        end
+
+      when CipherString::TYPE_AESCBC256_HMACSHA256_B64
+        macKey = nil
+        if key.bytesize == 32
+          tkey = hkdfStretch(key, "enc", 32)
+          macKey = hkdfStretch(key, "mac", 32)
+          key = tkey
+        elsif key.bytesize == 64
+          macKey = key[32, 32]
+          key = key[0, 32]
+        else
+          raise "invalid key size #{key.bytesize}"
+        end
+      else
+        raise "TODO: #{algo}"
+      end
+
       iv = OpenSSL::Random.random_bytes(16)
 
       cipher = OpenSSL::Cipher.new "AES-256-CBC"
@@ -127,13 +140,16 @@ class Bitwarden
     end
 
     # decrypt a CipherString and return plaintext
-    def decrypt(str, key, macKey)
-      c = CipherString.parse(str)
-      iv = Base64.decode64(c.iv)
-      ct = Base64.decode64(c.ct)
-      mac = c.mac ? Base64.decode64(c.mac) : nil
+    def decrypt(cs, key)
+      if !cs.is_a?(CipherString)
+        cs = CipherString.parse(cs)
+      end
 
-      case c.type
+      iv = Base64.decode64(cs.iv)
+      ct = Base64.decode64(cs.ct)
+      mac = cs.mac ? Base64.decode64(cs.mac) : nil
+
+      case cs.type
       when CipherString::TYPE_AESCBC256_B64
         cipher = OpenSSL::Cipher.new "AES-256-CBC"
         cipher.decrypt
@@ -144,6 +160,18 @@ class Bitwarden
         return pt
 
       when CipherString::TYPE_AESCBC256_HMACSHA256_B64
+        macKey = nil
+        if key.bytesize == 32
+          tkey = hkdfStretch(key, "enc", 32)
+          macKey = hkdfStretch(key, "mac", 32)
+          key = tkey
+        elsif key.bytesize == 64
+          macKey = key[32, 32]
+          key = key[0, 32]
+        else
+          raise "invalid key size #{key.bytesize}"
+        end
+
         cmac = OpenSSL::HMAC.digest(OpenSSL::Digest.new("SHA256"),
           macKey, iv + ct)
         if !self.macsEqual(macKey, mac, cmac)
@@ -161,6 +189,29 @@ class Bitwarden
       else
         raise "TODO implement #{c.type}"
       end
+    end
+
+    def hkdfStretch(prk, info, size)
+      hashlen = 32
+      prev = []
+      okm = []
+      n = (size / hashlen.to_f).ceil
+      n.times do |x|
+        t = []
+        t += prev
+        t += info.split("").map{|c| c.ord }
+        t += [ (x + 1) ]
+        hmac = OpenSSL::HMAC.digest(OpenSSL::Digest.new("SHA256"), prk,
+          t.map{|c| c.chr }.join(""))
+        prev = hmac.bytes
+        okm += hmac.bytes
+      end
+
+      if okm.length != size
+        raise "invalid hkdf result: #{okm.length} != #{size}"
+      end
+
+      okm.map{|c| c.chr }.join("")
     end
   end
 
