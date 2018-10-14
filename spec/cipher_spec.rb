@@ -6,39 +6,8 @@ describe "cipher module" do
   before do
     User.all.delete_all
 
-    post "/api/accounts/register", {
-      :name => nil,
-      :email => "api@example.com",
-      :masterPasswordHash => Bitwarden.hashPassword("asdf", "api@example.com",
-        User::DEFAULT_KDF_TYPE,
-        Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE]),
-      :masterPasswordHint => nil,
-      :key => Bitwarden.makeEncKey(
-        Bitwarden.makeKey("adsf", "api@example.com",
-        User::DEFAULT_KDF_TYPE,
-        Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE]),
-      ),
-      :kdf => Bitwarden::KDF::TYPE_IDS[User::DEFAULT_KDF_TYPE],
-      :kdfIterations => Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE],
-    }
-    last_response.status.must_equal 200
-
-    post "/identity/connect/token", {
-      :grant_type => "password",
-      :username => "api@example.com",
-      :password => Bitwarden.hashPassword("asdf", "api@example.com",
-        User::DEFAULT_KDF_TYPE,
-        Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE]),
-      :scope => "api offline_access",
-      :client_id => "browser",
-      :deviceType => 3,
-      :deviceIdentifier => SecureRandom.uuid,
-      :deviceName => "firefox",
-      :devicePushToken => ""
-    }
-    last_response.status.must_equal 200
-
-    @access_token = last_json_response["access_token"]
+    Rubywarden::Test::Factory.create_user
+    @access_token = Rubywarden::Test::Factory.login_user
   end
 
   it "should not allow access with bogus bearer token" do

@@ -10,21 +10,7 @@ describe "bitwarden importer" do
     @master_key = Bitwarden.makeKey(@password, @email,
       User::DEFAULT_KDF_TYPE,
       Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE])
-
-    post "/api/accounts/register", {
-      :name => nil,
-      :email => @email,
-      :masterPasswordHash => Bitwarden.hashPassword(@password, @email,
-        User::DEFAULT_KDF_TYPE,
-        Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE]),
-      :masterPasswordHint => nil,
-      :key => Bitwarden.makeEncKey(@master_key),
-      :kdf => Bitwarden::KDF::TYPE_IDS[User::DEFAULT_KDF_TYPE],
-      :kdfIterations => Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE],
-    }
-    last_response.status.must_equal 200
-
-    @user = User.where(:email => @email).first!
+    @user = Rubywarden::Test::Factory.create_user email: @email, password: @password
   end
 
   it "imports all expected data" do
