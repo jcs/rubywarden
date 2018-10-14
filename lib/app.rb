@@ -30,7 +30,7 @@ module Rubywarden
     register Sinatra::Namespace
     register Sinatra::ActiveRecordExtension
 
-    set :root, File.dirname(__FILE__)
+    set :root, File.expand_path("..", File.dirname(__FILE__))
 
     configure do
       enable :logging

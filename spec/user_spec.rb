@@ -7,16 +7,7 @@ describe "User" do
   before do
     User.all.delete_all
 
-    u = User.new
-    u.email = USER_EMAIL
-    u.kdf_type = Bitwarden::KDF::TYPE_IDS[User::DEFAULT_KDF_TYPE]
-    u.kdf_iterations = Bitwarden::KDF::DEFAULT_ITERATIONS[User::DEFAULT_KDF_TYPE]
-    u.password_hash = Bitwarden.hashPassword(USER_PASSWORD, USER_EMAIL,
-      Bitwarden::KDF::TYPES[u.kdf_type], u.kdf_iterations)
-    u.password_hint = "it's like password but not"
-    u.key = Bitwarden.makeEncKey(Bitwarden.makeKey(USER_PASSWORD, USER_EMAIL,
-      Bitwarden::KDF::TYPES[u.kdf_type], u.kdf_iterations))
-    u.save
+    u = Rubywarden::Test::Factory.create_user email: USER_EMAIL, password: USER_PASSWORD
   end
 
   it "should compare a user's hash" do
