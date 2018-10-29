@@ -187,7 +187,11 @@ Export everything from LastPass by going to your vault, "More Options",
 It will then export your details in a new browser window in CSV format, copy
 and paste this data into a file accessible from your Rubywarden installation.
 Unfortunately due to limitations in LastPass export the "extra fields" and
-"attachments" data in the LastPass vault will not be converted.
+"attachments"
+
+#####Important Note
+- Warning data in the LastPass vault will not be converted.
+Example the following `:(a&gt;` should be `:(a>`
 
 Once you have created your initial user account through Rubywarden, run the
 conversion tool with your account e-mail address:
