@@ -2,6 +2,8 @@ source "https://rubygems.org"
 
 ruby ">= 2.2.8"
 
+gem "rack", ">= 2.0.6"
+
 gem "sinatra", "~> 2.0.3"
 gem "sinatra-contrib", "~> 2.0.3"
 
