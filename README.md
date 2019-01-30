@@ -227,7 +227,7 @@ so you can run it offline.
 
 ### Rubywarden License
 
-Copyright (c) 2017-2018 joshua stein `<jcs@jcs.org>`
+Copyright (c) 2017-2019 joshua stein `<jcs@jcs.org>`
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
