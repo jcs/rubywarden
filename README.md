@@ -63,7 +63,7 @@ To run via Rack on port 4567, as user `_rubywarden`:
 You'll probably want to run it once with signups enabled, to allow yourself
 to create an account:
 
-	sudo -u _rubywarden env RUBYWARDEN_ENV=production ALLOW_SIGNUPS=1 bundle exec rackup -p 4567 config.ru
+	sudo -u _rubywarden env RUBYWARDEN_ENV=production RUBYWARDEN_ALLOW_SIGNUPS=1 bundle exec rackup -p 4567 config.ru
 
 Once the server is running, the Bitwarden apps (such as the Firefox extension)
 can be configured to use your own Bitwarden server before login.

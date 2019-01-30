@@ -1,11 +1,11 @@
 ENV["RUBYWARDEN_ENV"] = "test"
 
+# most tests require this to be on
+ENV["RUBYWARDEN_ALLOW_SIGNUPS"] = true
+
 require "minitest/autorun"
 require "rack/test"
 require "open3"
-
-# most tests require this to be on
-ALLOW_SIGNUPS = true
 
 require File.realpath(File.dirname(__FILE__) + "/../lib/rubywarden.rb")
 require "#{APP_ROOT}/lib/app.rb"

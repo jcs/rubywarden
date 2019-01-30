@@ -38,13 +38,13 @@ require "#{APP_ROOT}/lib/cipher.rb"
 require "#{APP_ROOT}/lib/folder.rb"
 require "#{APP_ROOT}/lib/attachment.rb"
 
-BASE_URL ||= "/api"
-IDENTITY_BASE_URL ||= "/identity"
-ICONS_URL ||= "/icons"
+BASE_URL = (ENV["RUBYWARDEN_BASE_URL"] || "/api")
+IDENTITY_BASE_URL = (ENV["RUBYWARDEN_IDENTITY_BASE_URL"] || "/identity")
+ICONS_URL = (ENV["RUBYWARDEN_ICONS_URL"] || "/icons")
 
 # whether to allow new users
 if !defined?(ALLOW_SIGNUPS)
-  ALLOW_SIGNUPS = (ENV["ALLOW_SIGNUPS"] || false)
+  ALLOW_SIGNUPS = (ENV["RUBYWARDEN_ALLOW_SIGNUPS"] || ENV["ALLOW_SIGNUPS"] || false)
 end
 
 # create/load JWT signing keys
