@@ -1,7 +1,7 @@
 ENV["RUBYWARDEN_ENV"] = "test"
 
 # most tests require this to be on
-ENV["RUBYWARDEN_ALLOW_SIGNUPS"] = true
+ENV["RUBYWARDEN_ALLOW_SIGNUPS"] = "1"
 
 require "minitest/autorun"
 require "rack/test"
