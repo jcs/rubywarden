@@ -57,7 +57,7 @@ if !u
 end
 
 totp_secret = ROTP::Base32.random_base32
-totp = ROTP::TOTP.new(totp_secret, :issuer => "bitwarden-ruby")
+totp = ROTP::TOTP.new(totp_secret, :issuer => "rubywarden")
 totp_url = totp.provisioning_uri(username)
 
 qrcode = RQRCode::QRCode.new(totp_url)
