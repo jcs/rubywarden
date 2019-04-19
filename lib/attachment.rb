@@ -16,19 +16,16 @@
 
 class Attachment < DBModel
   self.table_name = "attachments"
-  attr_accessor :context
 
   before_create :generate_uuid_primary_key
-  before_create :generate_url
 
-  belongs_to :cipher, foreign_key: :cipher_uuid, inverse_of: :attachments
+  belongs_to :cipher,
+    foreign_key: :cipher_uuid,
+    inverse_of: :attachments
 
-  def self.build_from_params(params, context)
-    attachment = new filename: params[:filename],
-                     size: params[:size],
-                     file: params[:file]
-    attachment.context = context
-    attachment
+  def self.build_from_params(params)
+    Attachment.new(filename: params[:filename], size: params[:size],
+      file: params[:file])
   end
 
   def to_hash
@@ -42,12 +39,11 @@ class Attachment < DBModel
     }
   end
 
-  private
-
-  def generate_url
-    self.url = context.url("/attachments/#{self.cipher_uuid}/#{self.id}")
+  def url
+    "#{::ATTACHMENTS_URL}/#{self.cipher_uuid}/#{self.id}"
   end
 
+private
   def human_file_size
     ActiveSupport::NumberHelper.number_to_human_size(self.size)
   end

@@ -38,7 +38,7 @@ module Rubywarden
             attachment_params = { filename: filename,
                                   size: file.size,
                                   file: file.read }
-            attachment = cipher.attachments.build_from_params(attachment_params, self)
+            attachment = cipher.attachments.build_from_params(attachment_params)
 
             Attachment.transaction do
               if !attachment.save
@@ -50,19 +50,24 @@ module Rubywarden
           end
 
           delete "/ciphers/:uuid/attachment/:attachment_id" do
-            delete_attachment uuid: params[:uuid], attachment_uuid: params[:attachment_id]
+            delete_attachment uuid: params[:uuid],
+              attachment_uuid: params[:attachment_id]
           end
 
           post "/ciphers/:uuid/attachment/:attachment_id/delete" do
-            delete_attachment uuid: params[:uuid], attachment_uuid: params[:attachment_id]
+            delete_attachment uuid: params[:uuid],
+              attachment_uuid: params[:attachment_id]
           end
         end # BASE_URL
 
-        app.get "/attachments/:uuid/:attachment_id" do
-          a = Attachment.find_by_uuid_and_cipher_uuid(params[:attachment_id], params[:uuid])
-          attachment(a.filename)
-          response.write(a.file)
-        end
+        app.namespace ATTACHMENTS_URL do
+          get "/:uuid/:attachment_id" do
+            a = Attachment.find_by_uuid_and_cipher_uuid(params[:attachment_id],
+              params[:uuid])
+            attachment(a.filename)
+            response.write(a.file)
+          end
+        end # ATTACHMENTS_URL
       end # registered app
     end
   end

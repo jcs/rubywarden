@@ -82,6 +82,7 @@ Identity, and Icon URLs.
 If you are not deploying Rubywarden on its own hostname or want to alter the
 paths for any reason, you can override them with environment variables:
 
+- `RUBYWARDEN_ATTACHMENTS_URL` for the attachments URL - defaults to `/attachments`
 - `RUBYWARDEN_BASE_URL` for the API base - defaults to `/api`
 - `RUBYWARDEN_IDENTITY_BASE_URL` for the identity API base - defaults to
   `/identity`
@@ -91,7 +92,7 @@ For example, if you had a website `example.com` and wanted to host Rubywarden
 on a subdirectory called `/notbitwarden`, you would set the environment
 variables in your startup script:
 
-	sudo -u _rubywarden env RUBYWARDEN_ENV=production RUBYWARDEN_BASE_URL=/notbitwarden/api RUBYWARDEN_IDENTITY_BASE_URL=/notbitwarden/identity RUBYWARDEN_ICONS_URL=/notbitwarden/icons bundle exec rackup -p 4567 config.ru
+	sudo -u _rubywarden env RUBYWARDEN_ENV=production RUBYWARDEN_BASE_URL=/notbitwarden/api RUBYWARDEN_IDENTITY_BASE_URL=/notbitwarden/identity RUBYWARDEN_ICONS_URL=/notbitwarden/icons RUBYWARDEN_ATTACHMENTS_URL=/notbitwarden/attachments bundle exec rackup -p 4567 config.ru
 
 Then you can configure the Bitwarden clients with a single server URL of
 `https://example.com/notbitwarden`.
