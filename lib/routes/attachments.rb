@@ -28,7 +28,7 @@ module Rubywarden
 
             # we have to extract filename from data -> head, since data -> filename is truncated
             filename = nil
-            if md = params[:data][:head].match(/filename=\"(\S+)\"\r\nContent-Type/)
+            if md = params[:data][:head].match(/filename=\"(\S+)\"/)
               filename = md[1]
             else
               return validation_error("filename cannot be blank")
