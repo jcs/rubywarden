@@ -6,8 +6,7 @@ describe "User" do
 
   before do
     User.all.delete_all
-
-    u = Rubywarden::Test::Factory.create_user email: USER_EMAIL, password: USER_PASSWORD
+    Rubywarden::Test::Factory.create_user email: USER_EMAIL, password: USER_PASSWORD
   end
 
   it "should compare a user's hash" do
