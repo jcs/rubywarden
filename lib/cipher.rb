@@ -29,6 +29,7 @@ class Cipher < DBModel
   serialize :securenote, JSON
   serialize :card, JSON
   serialize :identity, JSON
+  serialize :passwordhistory, JSON
 
   TYPE_LOGIN    = 1
   TYPE_NOTE     = 2
@@ -99,6 +100,7 @@ class Cipher < DBModel
       "Card" => self.card,
       "Identity" => self.identity,
       "SecureNote" => self.securenote,
+      "PasswordHistory" => self.passwordhistory,
     }
   end
 
@@ -125,6 +127,13 @@ class Cipher < DBModel
       end
 
       self.login = tlogin
+
+      if params[:passwordhistory].present?
+        self.passwordhistory = params[:passwordhistory].
+          map{|ph| ph.ucfirst_hash }
+      else
+        self.passwordhistory = nil
+      end
 
     when TYPE_NOTE
       self.securenote = params[:securenote].ucfirst_hash
