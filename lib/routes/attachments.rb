@@ -20,6 +20,10 @@ module Rubywarden
       def self.registered(app)
         app.namespace BASE_URL do
           post "/ciphers/:uuid/attachment" do
+            if !device_from_bearer
+              return validation_error("invalid bearer")
+            end
+
             cipher = retrieve_cipher uuid: params[:uuid]
 
             need_params(:data) do |p|
@@ -62,6 +66,8 @@ module Rubywarden
 
         app.namespace ATTACHMENTS_URL do
           get "/:uuid/:attachment_id" do
+            # no device authentication
+
             a = Attachment.find_by_uuid_and_cipher_uuid(params[:attachment_id],
               params[:uuid])
             attachment(a.filename)
