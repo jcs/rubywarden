@@ -71,7 +71,8 @@ class User < DBModel
     self.totp_secret.present?
   end
 
-  def update_master_password(old_pwd, new_pwd)
+  def update_master_password(old_pwd, new_pwd,
+  new_kdf_iterations = self.kdf_iterations)
     # original random encryption key must be preserved, just re-encrypted with
     # a new key derived from the new password
 
@@ -81,10 +82,11 @@ class User < DBModel
 
     self.key = Bitwarden.encrypt(orig_key,
       Bitwarden.makeKey(new_pwd, self.email,
-      Bitwarden::KDF::TYPES[self.kdf_type], self.kdf_iterations)).to_s
+      Bitwarden::KDF::TYPES[self.kdf_type], new_kdf_iterations)).to_s
 
     self.password_hash = Bitwarden.hashPassword(new_pwd, self.email,
-      self.kdf_type, self.kdf_iterations)
+      self.kdf_type, new_kdf_iterations)
+    self.kdf_iterations = new_kdf_iterations
     self.security_stamp = SecureRandom.uuid
   end
 

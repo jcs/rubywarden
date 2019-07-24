@@ -87,7 +87,26 @@ while new_master.to_s == "" || (new_master != new_master_conf)
   end
 end
 
-@u.update_master_password(password, new_master)
+new_kdf_iterations = nil
+while new_kdf_iterations.to_s == ""
+  print "kdf iterations (currently #{@u.kdf_iterations}, default " <<
+    "#{Bitwarden::KDF::DEFAULT_ITERATIONS[@u.kdf_type]}): "
+  new_kdf_iterations = STDIN.gets.chomp
+
+  if new_kdf_iterations.to_s == ""
+    new_kdf_iterations = Bitwarden::KDF::DEFAULT_ITERATIONS[@u.kdf_type]
+    break
+  elsif !(r = Bitwarden::KDF::ITERATION_RANGES[@u.kdf_type]).
+  include?(new_kdf_iterations.to_i)
+    puts "iterations must be between #{r}"
+    new_kdf_iterations = nil
+  else
+    new_kdf_iterations = new_kdf_iterations.to_i
+    break
+  end
+end
+
+@u.update_master_password(password, new_master, new_kdf_iterations)
 @u.password_hint = new_master_hint
 if !@u.save
   puts "error saving new password"
