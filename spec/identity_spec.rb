@@ -109,7 +109,7 @@ describe "identity module" do
 
     (u = User.find_by_email("nobody4@example.com")).wont_be_nil
     u.uuid.wont_be_nil
-    u.password_hash.must_equal "PGC1vNJZUL3z5wTKAgpXsODf6KzIPcr0XCzTplceXQU="
+    u.password_hash.must_equal "uQOY5dffPoKCueMu3cMXl2KOL52NerIQlwCEpQ6mW6s="
 
     post "/api/accounts/prelogin", {
       :email => "nobody4@example.com",
