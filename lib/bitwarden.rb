@@ -29,7 +29,7 @@ class Bitwarden
     TYPE_IDS = TYPES.invert
 
     DEFAULT_ITERATIONS = {
-      PBKDF2 => 5000,
+      PBKDF2 => 100_000,
     }
 
     ITERATION_RANGES = {
