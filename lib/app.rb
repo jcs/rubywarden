@@ -59,10 +59,14 @@ module Rubywarden
       # set CORS headers for safari extension
       response.headers["Access-Control-Allow-Origin"] = "file://"
       # just parrot back whatever safari asked for
-      response.headers["Access-Control-Allow-Methods"] =
-        request.env["HTTP_ACCESS_CONTROL_REQUEST_METHOD"]
-      response.headers["Access-Control-Allow-Headers"] =
-        request.env["HTTP_ACCESS_CONTROL_REQUEST_HEADERS"]
+      if request.env["HTTP_ACCESS_CONTROL_REQUEST_METHOD"]
+       response.headers["Access-Control-Allow-Methods"] =
+         request.env["HTTP_ACCESS_CONTROL_REQUEST_METHOD"]
+      end
+      if request.env["HTTP_ACCESS_CONTROL_REQUEST_HEADERS"]
+        response.headers["Access-Control-Allow-Headers"] =
+          request.env["HTTP_ACCESS_CONTROL_REQUEST_HEADERS"]
+      end
     end
 
     register Rubywarden::Routing::Api
