@@ -76,7 +76,20 @@ put /(.*)/ do
   proxy_to upstream_url_for(request.path_info), :put
 end
 
+options /(.*)/ do
+  proxy_to upstream_url_for(request.path_info), :options
+end
+
 def proxy_to(url, method)
+  if RAW_QUERIES
+    puts "#{request.env["REQUEST_METHOD"]} request to #{request.path_info}:"
+    request.env.each do |k,v|
+      if k.match(/^[A-Z_]+$/)
+        puts " #{k}: #{v}"
+      end
+    end
+  end
+
   puts "proxying #{method.to_s.upcase} to #{url}"
 
   uri = URI.parse(url)
@@ -121,6 +134,8 @@ def proxy_to(url, method)
     res = h.put(uri.path, post_data, send_headers)
   when :delete
     res = h.delete(uri.path, send_headers)
+  when :options
+    res = h.options(uri.path, send_headers)
   else
     raise "unknown method type #{method.inspect}"
   end
