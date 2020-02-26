@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby ">= 2.2.8"
+ruby ">= 2.4.0"
 
 gem "rack", "~> 2.0.0"
 
