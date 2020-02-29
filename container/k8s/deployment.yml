@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: rubywarden
+  name: rubywarden
+spec:
+  selector:
+    matchLabels:
+      app: rubywarden
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: rubywarden
+    spec:
+      containers:
+      - env:
+        - name: RUBYWARDEN_ENV
+          value: production
+        - name: RUBYWARDEN_ALLOW_SIGNUPS
+          value: "0" # Change to a 1 on first signup
+        image: your.image/user/rubywarden
+        imagePullPolicy: Always
+        name: rubywarden
+        resources: {}
+        volumeMounts:
+        - name: db
+          mountPath: /app/db/production
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      volumes:
+      - name: db
+        hostPath:
+          path: /path/on/host
+          type: Directory
+

@@ -41,6 +41,27 @@ Automated deployment of Rubywarden is possible with 3rd party support:
 
 - [Ansible playbook](https://github.com/qbit/openbsd-rubywarden) for OpenBSD
 
+#### via container
+The repository also contains a container spec as well as resources to run the container via docker-compose or kubernetes.
+
+##### Building
+To build the image: `cd container && docker build .. -t rubywarden`  
+then push it wherever by tagging it:   
+`docker tag rubywarden quay.io/myuser/rubywarden`   
+then pushing:   
+`docker push quay.io/myuser/rubywarden`  
+
+##### docker-compose
+To build and run the container, just run `cd container && docker-compose up -d`   
+
+docker-compose will handle building the image and running it. 
+The container will be running on localhost:4567 with a volume mount for the production db
+
+##### kubernetes
+Build the image, push it somewhere your cluster can pull from, then update the `container/k8s/deployment.yml` file with your image location. From there you should be able to run `kubectl create -f container/k8s/deployment.yml` to create a deployment on your cluster. 
+
+After that, create the service using the `service.yml` file as an example, and if you have an ingress running there is an example `ingress.yml` as well to run rubywarden behind TLS.
+
 ### Manual Setup
 
 Run `bundle install` at least once.

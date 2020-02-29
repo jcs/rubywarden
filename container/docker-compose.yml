@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  rubywarden:
+    build:
+      context: ..
+      dockerfile: container/Dockerfile
+    image: rubywarden:latest
+    container_name: rubywarden
+    ports:
+      - "4567:4567"
+    environment:
+      - RUBYWARDEN_ENV=production
+      - RUBYWARDEN_ALLOW_SIGNUPS=0 # change to 1 on first run to allow a signup
+    volumes:
+      - data:/app/db/production
+      #- ./db/production:/app/db/production # local folder if you don't want to use a volume
+

@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    certmanager.k8s.io/cluster-issuer: my-issuer
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  name: rubywarden
+spec:
+  rules:
+  - host: rubywarden.my.host
+    http:
+      paths:
+      - backend:
+          serviceName: rubywarden
+          servicePort: 4567
+  tls:
+  - hosts:
+    - rubywarden.my-host
+    secretName: rubywarden-cert

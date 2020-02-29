@@ -1,0 +1,77 @@
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: rubywarden
+    name: rubywarden
+  spec:
+    selector:
+      matchLabels:
+        app: rubywarden
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: rubywarden
+      spec:
+        containers:
+        - env:
+          - name: RUBYWARDEN_ENV
+            value: production
+          - name: RUBYWARDEN_ALLOW_SIGNUPS
+            value: "0" # Change to a 1 on first signup
+          image: your.image/user/rubywarden
+          imagePullPolicy: Always
+          name: rubywarden
+          resources: {}
+          volumeMounts:
+          - name: db
+            mountPath: /app/db/production
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        volumes:
+        - name: db
+          hostPath:
+            path: /path/on/host
+            type: Directory
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: rubywarden
+    name: rubywarden
+  spec:
+    ports:
+    - port: 4567
+      protocol: TCP
+      targetPort: 4567
+    selector:
+      app: rubywarden
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: extensions/v1beta1
+  kind: Ingress
+  metadata:
+    annotations:
+      certmanager.k8s.io/cluster-issuer: selfsigning-issuer
+      nginx.ingress.kubernetes.io/rewrite-target: /
+    name: rubywarden
+  spec:
+    rules:
+    - host: rubywarden.my.host
+      http:
+        paths:
+        - backend:
+            serviceName: rubywarden
+            servicePort: 4567
+    tls:
+    - hosts:
+      - rubywarden.my-host
+      secretName: rubywarden-cert
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
