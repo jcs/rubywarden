@@ -99,11 +99,6 @@ Then you can configure the Bitwarden clients with a single server URL of
 
 ### Updating
 
-If you've previously used Rubywarden before July 30, 2018 when it was called
-`bitwarden-ruby`, when it did not use ActiveRecord, you should instead
-[migrate](AR-MIGRATE.md)
-your existing database.
-
 To update your instance of Rubywarden, fetch the latest code:
 
 	cd /path/to/your/rubywarden

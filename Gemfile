@@ -30,8 +30,4 @@ group :keepass, :optional => true do
   gem 'rubeepass', '~> 3.3'
 end
 
-group :migrate, optional: true do
-  gem 'yaml_db'
-end
-
 gem 'pry'
