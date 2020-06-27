@@ -208,6 +208,11 @@ module Rubywarden
             delete_cipher app: app, uuid: params[:uuid]
           end
 
+          # delete a cipher (new client)
+          put "/ciphers/:uuid/delete" do
+            delete_cipher app: app, uuid: params[:uuid]
+          end
+
           #
           # folders
           #
