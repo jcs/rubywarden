@@ -1,0 +1,5 @@
+name,url,username,password
+cloud.digitalocean.com,https://cloud.digitalocean.com/login,root,mySuper.Password1
+m.facebook.com,https://m.facebook.com/,admin,mySuper?Password2
+github.com,https://github.com/login,supervisor,mySuper%Password3
+gitlab.com,https://gitlab.com/users/sign_in,moderator,mySuper-Password4
