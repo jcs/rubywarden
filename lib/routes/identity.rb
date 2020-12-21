@@ -110,6 +110,8 @@ module Rubywarden
                 :token_type => "Bearer",
                 :refresh_token => d.refresh_token,
                 :Key => d.user.key,
+                :Kdf => d.user.kdf_type,
+                :KdfIterations => d.user.kdf_iterations,
                 # TODO: when to include :privateKey and :TwoFactorToken?
               }.to_json
             end
