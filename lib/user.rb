@@ -25,9 +25,18 @@ class User < DBModel
   before_create :generate_uuid_primary_key
   before_validation :generate_security_stamp
 
-  has_many :ciphers, foreign_key: :user_uuid, inverse_of: :user
-  has_many :folders, foreign_key: :user_uuid, inverse_of: :user
-  has_many :devices, foreign_key: :user_uuid, inverse_of: :user
+  has_many :ciphers,
+    foreign_key: :user_uuid,
+    inverse_of: :user,
+    dependent: :destroy
+  has_many :folders,
+    foreign_key: :user_uuid,
+    inverse_of: :user,
+    dependent: :destroy
+  has_many :devices,
+    foreign_key: :user_uuid,
+    inverse_of: :user,
+    dependent: :destroy
 
   def decrypt_data_with_master_password_key(data, mk)
     # self.key is random data encrypted with the key of (password,email), so
