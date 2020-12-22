@@ -21,7 +21,10 @@ class Folder < DBModel
   before_create :generate_uuid_primary_key
 
   belongs_to :user, foreign_key: :user_uuid, inverse_of: :folders
-  has_many :ciphers, foreign_key: :folder_uuid, inverse_of: :folder
+  has_many :ciphers,
+    foreign_key: :folder_uuid,
+    inverse_of: :folder,
+    dependent: :nullify
 
   def to_hash
     {
