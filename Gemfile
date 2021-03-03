@@ -7,7 +7,7 @@ gem "rack", "~> 2.1.4"
 gem "sinatra", "~> 2.0.0"
 gem "sinatra-contrib", "~> 2.0.0"
 
-gem "activerecord", "~> 5.1.0"
+gem "activerecord", "~> 5.2.4"
 gem "sinatra-activerecord", "~> 2.0.0"
 gem "sqlite3"
 
