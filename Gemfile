@@ -4,8 +4,8 @@ ruby ">= 2.4.0"
 
 gem "rack", "~> 2.2"
 
-gem "sinatra", "~> 2.2"
-gem "sinatra-contrib", "~> 2.2"
+gem "sinatra", "~> 3.0"
+gem "sinatra-contrib", "~> 3.0"
 
 gem "activerecord", "~> 5.2"
 gem "sinatra-activerecord", "~> 2.0"
